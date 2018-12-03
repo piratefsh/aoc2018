@@ -18,20 +18,21 @@ def calc(p, s):
 
 def part_a(file, scale=1000):
   fabric = [[0] * scale for i in range(0, scale)]
+  patches = []
   overlaps = 0
   for line in file:
     nid, st, sz = parse(line)
     sx, sy, ex, ey = calc(st, sz)
+    patches.append((nid, sx, sy, ex, ey))
     for x in range(sx, ex):
       for y in range(sy, ey):
         fabric[x][y] += 1
         overlaps = overlaps + 1 if fabric[x][y] == 2 else overlaps
-  return overlaps, fabric
+  return overlaps, fabric, patches
 
-def part_b(file, fabric):
-  for line in file:
-    nid, st, sz = parse(line)
-    sx, sy, ex, ey = calc(st, sz)
+def part_b(file, fabric, patches):
+  for p in patches:
+    nid, sx, sy, ex, ey = p
     occupied = 0
     for x in range(sx, ex):
       for y in range(sy, ey):
@@ -43,11 +44,11 @@ def part_b(file, fabric):
 assert(parse('#1 @ 1,3: 4x4') == ('#1', (1, 3), (4, 4)))
 assert(parse('#200 @ 100,3: 400x400') == ('#200', (100, 3), (400, 400)))
 
-overlaps, fabric = part_a(open('sample.txt'), 8)
+overlaps, fabric, patches = part_a(open('sample.txt'), 8)
 assert(overlaps == 4)
-assert(part_b(open('sample.txt'), fabric) == '#3')
+assert(part_b(open('sample.txt'), fabric, patches) == '#3')
 
-overlaps, fabric = part_a(open('input.txt'))
+overlaps, fabric, patches = part_a(open('input.txt'))
 assert(overlaps == 121259)
-assert(part_b(open('input.txt'), fabric) == '#239')
+assert(part_b(open('input.txt'), fabric, patches) == '#239')
 print('all tests pass')
