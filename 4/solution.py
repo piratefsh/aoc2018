@@ -37,11 +37,11 @@ def parse_date(date_time):
   date = "".join(raw_date.split('-'))
   hr, minute = raw_time.split(':')
   return date, hr, minute
-  
+
 def parse_event(event):
   if event.startswith('Guard'):
     gid, = re.match(r'Guard #(\d*).*', event).groups()
-    return 'start', gid 
+    return 'start', gid
   elif event.startswith('wakes up'):
     return 'on', None
   elif event.startswith('falls asleep'):
@@ -61,19 +61,16 @@ def parse_and_sort(file):
   sorted_by_date = sorted([parse(line) for line in file])
   for log in sorted_by_date:
     if log.gid is not None:
-      last_gid = log.gid 
+      last_gid = log.gid
     else:
       log.gid = last_gid
     logs.append(log)
 
   return sorted_by_date
 
-# Strategy 1: 
-# Find the guard that has the most minutes asleep. 
+# Strategy 1:
+# Find the guard that has the most minutes asleep.
 # What minute does that guard spend asleep the most?
-def part_a(logs):
-  pass
-
 def sleepist_minute(logs, gid):
   schedule = [0] * 60
   highest = 0
@@ -87,7 +84,7 @@ def sleepist_minute(logs, gid):
       for m in range(last_awake.iminute, log.iminute):
         schedule[m] += 1
         if schedule[m] > schedule[highest]:
-          highest = m 
+          highest = m
   return highest
 
 def sleepiest_guard(logs):
@@ -103,6 +100,26 @@ def sleepiest_guard(logs):
       highest = log.gid if highest is None or guards[log.gid] > guards[highest] else highest
   return highest
 
+def most_sleep_per_guard_minute(logs):
+  guards = dict()
+  highest = (0, 0)
+  highest_min_count = 0
+  last_awake = None
+  for log in logs:
+    if log.event == 'off':
+      last_awake = log
+    elif log.event == 'on':
+      if log.gid not in guards:
+        guards[log.gid] = [0] * 60
+      for m in range(last_awake.iminute, log.iminute):
+        guards[log.gid][m] += 1
+
+        if guards[log.gid][m] > highest_min_count:
+          highest_min_count = guards[log.gid][m]
+          highest = (log.gid, m)
+
+  return highest
+
 assert(parse_date('1518-11-01 23:59') == ('15181101', '23', '59'))
 assert(str(parse('[1518-05-12 00:44] falls asleep')) == 'gid:None date:15180512 hour:00 minute:44 event:off')
 assert(str(parse('[1518-11-01 00:01] Guard #10 begins shift')) == 'gid:10 date:15181101 hour:00 minute:01 event:start')
@@ -112,11 +129,15 @@ sample_logs = parse_and_sort(open('sample.txt'))
 sample_g = sleepiest_guard(sample_logs)
 assert(sample_g == '10')
 assert(sleepist_minute(sample_logs, sample_g) == 24)
+print(most_sleep_per_guard_minute(sample_logs))
+assert(most_sleep_per_guard_minute(sample_logs) == ('99', 45))
 
 input_logs = parse_and_sort(open('input.txt'))
 input_g = sleepiest_guard(input_logs)
 assert(input_g == '1021')
 input_m = sleepist_minute(input_logs, input_g)
 assert(input_m == 30)
-print('answer', int(input_g) * input_m)
+print('answer part 1', int(input_g) * input_m)
+gid, minute = most_sleep_per_guard_minute(input_logs)
+print('answer part 2', int(gid) * minute)
 print('all tests pass')
