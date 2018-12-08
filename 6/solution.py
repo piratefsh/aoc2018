@@ -1,10 +1,5 @@
 import math
 def chronal(coords):
-
-  # sort by y then x coord
-  coords.sort(key=lambda xy: xy[1])
-  coords.sort(key=lambda xy: xy[0])
-
   start, end = bounds(coords)
   ex, ey = end
   sx, sy = start
@@ -30,7 +25,22 @@ def chronal(coords):
     if i not in border_idx]
 
   _, max_cells = max(enumerate(totals), key=lambda x: x[1])
-  return max_cells
+  return max_cells, regions(coords, flat_field)
+
+def regions(points, flat_field, maxd=10000):
+  start, end = bounds(coords)
+  ex, ey = end
+  sx, sy = start
+
+  reg_size = 0
+
+  for x in range(sx, ex + 1):
+    for y in range(sy, ey + 1):
+      distances = [man_dist((x,y), pt) for pt in points]
+      total_dist = sum(distances)
+      if total_dist < maxd:
+        reg_size += 1
+  return reg_size
 
 def man_dist(a, b):
   return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -60,6 +70,7 @@ def is_finite(coord, others):
   # an area is finite if it is bounded by 4 other points
   pass
 
+# coords = parse(open('sample.txt'))
 coords = parse(open('input.txt'))
 print(bounds(coords))
 # assert(bounds(coords) == ((1, 1), (8, 9)))
