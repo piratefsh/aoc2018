@@ -4,14 +4,15 @@ def chronal(coords):
   coords.sort(key=lambda xy: xy[1])
   coords.sort(key=lambda xy: xy[0])
 
-  _, size = bounds(coords)
-  sizex, sizey = size
+  start, end = bounds(coords)
+  ex, ey = end
+  sx, sy = start
 
   # field = [[0] * sizey for i in range(sizex)]
 
   field = [closest((x, y), coords)
-    for x in range(sizex + 1)
-      for y in range(sizey + 1)]
+    for x in range(sx, ex + 1)
+      for y in range(sy, ey + 1)]
 
   totals = [field.count(i) for i in range(len(coords))]
   idx, max_cells = max(enumerate(totals), key=lambda x: x[1])
