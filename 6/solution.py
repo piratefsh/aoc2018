@@ -1,3 +1,4 @@
+import math
 def chronal(coords):
 
   # sort by y then x coord
@@ -8,14 +9,27 @@ def chronal(coords):
   ex, ey = end
   sx, sy = start
 
-  # field = [[0] * sizey for i in range(sizex)]
+  field = [
+    [closest((x, y), coords)
+      for x in range(sx, ex + 1)]
+        for y in range(sy, ey + 1)]
 
-  field = [closest((x, y), coords)
-    for x in range(sx, ex + 1)
-      for y in range(sy, ey + 1)]
+  width = ex-sx
+  height = ey-sy
 
-  totals = [field.count(i) for i in range(len(coords))]
-  idx, max_cells = max(enumerate(totals), key=lambda x: x[1])
+  border_idx = set([col
+    for i, row in enumerate(field)
+    for j, col in enumerate(row)
+      if i == 0 or
+        i == len(field) - 1 or
+        j == 0 or
+        j == len(row) - 1])
+
+  flat_field = [c for row in field for c in row]
+  totals = [flat_field.count(i) for i in range(len(coords))
+    if i not in border_idx]
+
+  _, max_cells = max(enumerate(totals), key=lambda x: x[1])
   return max_cells
 
 def man_dist(a, b):
