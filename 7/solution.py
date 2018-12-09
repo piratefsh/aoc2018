@@ -116,9 +116,9 @@ def parse(file, base_duration=0):
   return nodes
 
 nodes = parse(open('sample.txt'), 0)
-print(order(nodes, workers=2))
+assert(order(nodes, workers=2) == ('CABFDE', 15))
 
 nodes = parse(open('input.txt'), 60)
-print(order(nodes, workers=5))
+assert(order(nodes, workers=5) == ('FHRXMQSNEGWZIBCLOUATDJPKVY', 917))
 
 
