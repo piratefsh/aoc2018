@@ -9,9 +9,6 @@ class DoubleNode:
     self.next = node
     node.prev = self
 
-  def visit(self):
-    self.visited = True
-
   def __repr__(self):
     # return str(self.value)
     return "<Node %d, next %d, prev %d>" % (self.value, self.next.value, self.prev.value)
@@ -48,9 +45,7 @@ def play(nplayers=1, nmarbles=10):
       # normal case
       # insert two next clockwise
       new_node = DoubleNode(i)
-
-      clasp = curr.next.next
-      new_node.set_next(clasp)
+      new_node.set_next(curr.next.next)
       curr.next.set_next(new_node)
       curr = new_node
 
@@ -59,3 +54,4 @@ def play(nplayers=1, nmarbles=10):
 
 assert(play(9, 25) == 32)
 assert(play(452, 71250) == 388844)
+# print(play(452, 71250 * 100))
