@@ -1,59 +1,52 @@
-import math
-def chronal(coords, maxd=30):
-  start, end = bounds(coords)
+def alt_chronal(beacons, maxd=32):
+  start, end = bounds(beacons)
   ex, ey = end
   sx, sy = start
 
-  field = [
-    [closest((x, y), coords)
-      for x in range(sx, ex + 1)]
-        for y in range(sy, ey + 1)]
-
-  width = ex-sx
-  height = ey-sy
-
-  border_idx = set([col
-    for i, row in enumerate(field)
-    for j, col in enumerate(row)
-      if i == 0 or
-        i == len(field) - 1 or
-        j == 0 or
-        j == len(row) - 1])
-
-  flat_field = [c for row in field for c in row]
-  totals = [flat_field.count(i) for i in range(len(coords))
-    if i not in border_idx]
-
-  _, max_cells = max(enumerate(totals), key=lambda x: x[1])
-  return max_cells, regions(coords, flat_field, maxd)
-
-def regions(points, flat_field, maxd):
-  start, end = bounds(coords)
-  ex, ey = end
-  sx, sy = start
-
-  reg_size = 0
+  border_beacons = set()
+  cell_counts = [0] * len(beacons)
+  total_regions = 0
 
   for x in range(sx, ex + 1):
     for y in range(sy, ey + 1):
-      distances = [man_dist((x,y), pt) for pt in points]
-      total_dist = sum(distances)
+      closest = (0, 10000000)
+      dupe = False
+
+      # keep track of total distances to all beacons
+      total_dist = 0
+
+      for i, b in enumerate(beacons):
+        dist = man_dist((x, y), b)
+        total_dist += dist
+        cidx, cdist = closest
+
+        if dist < cdist:
+          closest = (i, dist)
+          dupe = False
+
+        if dist == cdist:
+          dupe = True
+
+      cidx, _ = closest
+
+      # identify if beacon is at borders
+      if x == sx or x == ex or y == sy or y == ey:
+        border_beacons.add(cidx)
+
+      # add closest beacon if there wasn't a duplicate
+      if not dupe:
+        cell_counts[cidx] += 1
+
+      # determine if xy is in region
       if total_dist < maxd:
-        reg_size += 1
-  return reg_size
+        total_regions += 1
+
+  # ignore beacons that are at borders
+  non_infinite_regions = [c for i, c in enumerate(cell_counts) if i not in border_beacons]
+  return max(non_infinite_regions), total_regions
 
 def man_dist(a, b):
   return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-def closest(xy, points):
-  distances = [(man_dist(xy, p), i) for i, p in enumerate(points)]
-  min_dist, idx = min(distances, key=lambda x: x[0])
-
-  # if has another competing point
-  if len([d for d, i in distances if d == min_dist]) > 1:
-    return -1
-  else:
-    return idx
 
 def parse(file):
   return [tuple(map(int, coord.split(', '))) for coord in file]
@@ -66,14 +59,8 @@ def bounds(coords):
   _, max_y = max(coords, key=lambda xy : xy[1])
   return (min_x, min_y), (max_x, max_y)
 
-def is_finite(coord, others):
-  # an area is finite if it is bounded by 4 other points
-  pass
-
 coords = parse(open('sample.txt'))
-# coords = parse(open('input.txt'))
-print(bounds(coords))
-print(chronal(coords, 32))
-assert(bounds(coords) == ((1, 1), (8, 9)))
-assert(chronal(coords, 32) == (17, 16))
+big_coords = parse(open('input.txt'))
+assert(alt_chronal(coords, 32) == (17, 16))
+assert(alt_chronal(big_coords, 10000) == (2906, 50530))
 print('tests pass')
