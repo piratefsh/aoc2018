@@ -32,12 +32,13 @@ class Node:
     return "<%s befores: %s, afters: %s>" % (self.name, befs, afts)
 
 class Worker:
-  def __init__(self, wid, queue, done_queue):
+  def __init__(self, wid, done_queue):
     self.busy = False
     self.id = wid
     self.duration = 0
     self.curr_node = None
-    self.queue = queue
+
+    # needs reference to queue to update them when it is done
     self.done_queue = done_queue
 
   def occupy(self, node):
@@ -66,20 +67,21 @@ def order(nodes, workers=1):
   total_nodes = len(nodes.values())
 
   # sort nodes
-  queue = sorted([n for n in nodes.values()], key=lambda n: n.name)
+  snodes = sorted([n for n in nodes.values()], key=lambda n: n.name)
 
   # create workers
-  workers = [Worker(i, queue, done_queue) for i in range(workers)]
+  workers = [Worker(i, done_queue) for i in range(workers)]
   ticks = 0
 
+  #  while not all steps are done
   while len(done_queue) != total_nodes:
-    for n in queue:
+    for n in snodes:
       # if node is ready for use
       if n.ready():
         # if has available workers,
         avail_workers = [w for w in workers if not w.busy]
         if len(avail_workers) > 0:
-          # put someone to work
+          # put one of them to work
           avail_workers[0].occupy(n)
 
     # advance time
