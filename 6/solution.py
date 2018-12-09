@@ -1,5 +1,5 @@
 import math
-def chronal(coords):
+def chronal(coords, maxd=30):
   start, end = bounds(coords)
   ex, ey = end
   sx, sy = start
@@ -25,9 +25,9 @@ def chronal(coords):
     if i not in border_idx]
 
   _, max_cells = max(enumerate(totals), key=lambda x: x[1])
-  return max_cells, regions(coords, flat_field)
+  return max_cells, regions(coords, flat_field, maxd)
 
-def regions(points, flat_field, maxd=10000):
+def regions(points, flat_field, maxd):
   start, end = bounds(coords)
   ex, ey = end
   sx, sy = start
@@ -70,10 +70,10 @@ def is_finite(coord, others):
   # an area is finite if it is bounded by 4 other points
   pass
 
-# coords = parse(open('sample.txt'))
-coords = parse(open('input.txt'))
+coords = parse(open('sample.txt'))
+# coords = parse(open('input.txt'))
 print(bounds(coords))
-# assert(bounds(coords) == ((1, 1), (8, 9)))
-# assert(chronal(coords) == 17)
-print(chronal(coords))
+print(chronal(coords, 32))
+assert(bounds(coords) == ((1, 1), (8, 9)))
+assert(chronal(coords, 32) == (17, 16))
 print('tests pass')
