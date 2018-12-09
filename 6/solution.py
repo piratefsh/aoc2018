@@ -29,12 +29,12 @@ def alt_chronal(beacons, maxd=32):
 
       cidx, _ = closest
 
-      # identify if beacon is at borders
       if x == sx or x == ex or y == sy or y == ey:
-        border_beacons.add(cidx)
-
-      # add closest beacon if there wasn't a duplicate
-      if not dupe:
+        # identify if beacon is at borders
+        # and invalidate count if so
+        cell_counts[cidx] -= 100000000
+      elif not dupe:
+        # add closest beacon if there wasn't a duplicate
         cell_counts[cidx] += 1
 
       # determine if xy is in region
@@ -42,8 +42,7 @@ def alt_chronal(beacons, maxd=32):
         total_regions += 1
 
   # ignore beacons that are at borders
-  non_infinite_regions = [c for i, c in enumerate(cell_counts) if i not in border_beacons]
-  return max(non_infinite_regions), total_regions
+  return max(cell_counts), total_regions
 
 def man_dist(a, b):
   return abs(a[0] - b[0]) + abs(a[1] - b[1])

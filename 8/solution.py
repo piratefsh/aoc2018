@@ -9,11 +9,9 @@ def count(node, val_fn):
   # return if is leaf node
   if nchildren == 0:
     meta = sum(node[2: 2 + nentries]) if nentries > 0 else 0
-    # print('leaf', meta, node[:2 + nentries])
     return meta, 2 + nentries
 
   currl = 0
-
   children_vals = []
 
   for i in range(nchildren):
@@ -23,12 +21,8 @@ def count(node, val_fn):
 
   curr_end = 2 + currl + nentries
   meta_vals = node[curr_end - nentries : curr_end]
-
   meta = val_fn(meta_vals, children_vals)
 
-  # print('meta vals', meta_vals)
-  # print('children vals', children)
-  # print('not', meta, node[:curr_end], curr_end)
   return (meta, curr_end)
 
 def val_a(meta_vals, children_vals):
