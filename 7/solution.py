@@ -101,7 +101,6 @@ def parse(file, base_duration=0):
     nodes[before].add_after(nodes[after])
     nodes[after].add_before(nodes[before])
 
-  # print(nodes.values())
   return nodes
 
 nodes = parse(open('sample.txt'), 0)
