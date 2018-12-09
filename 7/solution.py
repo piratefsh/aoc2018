@@ -2,11 +2,12 @@ import re
 import bisect
 
 class Node:
-  def __init__(self, name):
+  def __init__(self, name, base_duration=0):
     self.name = name
     self.befores = []
     self.afters = []
     self.visited = False
+    self.duration = ord(name) - 65 + 1 + base_duration
 
   def add_before(self, node):
     self.befores.append(node)
@@ -53,27 +54,69 @@ def parse(file):
   # print(nodes.values())
   return nodes
 
-def order(nodes):
-  order_visited = []
-  unvisited = sorted([n for n in nodes.values() if n.ready()])
-  while len(unvisited) > 0:
+class Worker:
+  def __init__(self, wid, queue, done_queue):
+    self.busy = False
+    self.id = wid
+    self.duration = 0
+    self.curr_node = None
+    self.queue = queue
+    self.done_queue = done_queue
 
-    for n in unvisited:
+  def occupy(self, node):
+    print(str(self) + ' occupied with ' + node.name)
+    self.busy = True
+    self.curr_node = node
+    self.duration = node.duration
+
+  def finish_node(self, n):
+    print(n.name + ' finished')
+    n.visit()
+    self.done_queue.append(n.name)
+    # for a in n.afters:
+    #   if not a.visited and a not in self.queue:
+    #     bisect.insort_left(self.queue, a)
+
+  def tick(self):
+    self.duration -= 1
+    if self.duration == 0:
+      self.busy = False
+      self.finish_node(self.curr_node)
+      print(str(self) + ' freed')
+
+  def __repr__(self):
+    return "Worker %d" % self.id
+
+def order(nodes, workers=1):
+  done_queue = []
+  total_nodes = len(nodes.values())
+  queue = sorted([n for n in nodes.values()])
+  workers = [Worker(i, queue, done_queue) for i in range(workers)]
+  has_busy_workers = False
+
+  ticks = 0
+
+  while len(done_queue) != total_nodes:
+    for n in queue:
       if n.ready():
-        unvisited.remove(n)
-        order_visited.append(n.name)
-        n.visit()
+        # if has available workers,
+        avail_workers = [w for w in workers if not w.busy]
+        has_busy_workers = len(avail_workers) > 0
+        if len(avail_workers) > 0:
+          # put someone to work
 
-        # add next steps
-        for a in n.afters:
-          if not a.visited and a not in unvisited:
-            bisect.insort_left(unvisited, a)
+          queue.remove(n)
+          avail_workers[0].occupy(n)
 
-        break
+    # advance time
+    [w.tick() for w in workers]
+    ticks += 1
+    print('tick', ticks)
 
-  return order_visited
+  return "".join(done_queue), ticks
 
-nodes = parse(open('input.txt'))
-print("".join(order(nodes)))
+nodes = parse(open('sample.txt'))
+print(order(nodes, workers=2))
+# assert(order(nodes, workers=1) == 'CABDFE')
 
 
