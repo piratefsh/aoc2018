@@ -2,12 +2,13 @@ import re
 import bisect
 
 class Node:
-  def __init__(self, name, base_duration=0):
+  def __init__(self, name, base_duration):
     self.name = name
     self.befores = []
     self.afters = []
     self.visited = False
-    self.duration = ord(name) - 65 + 1 + base_duration
+    self.duration = ord(name) - 64 + base_duration
+    self.occupied = False
 
   def add_before(self, node):
     self.befores.append(node)
@@ -17,7 +18,10 @@ class Node:
 
   def ready(self):
     # has no befores, or no unvisited befores
-    return len(self.befores) == 0 or len([b for b in self.befores if not b.visited]) == 0
+    return not self.occupied and (len(self.befores) == 0 or len([b for b in self.befores if not b.visited]) == 0)
+
+  def occupy(self):
+    self.occupied = True
 
   def visit(self):
     self.visited = True
@@ -38,15 +42,15 @@ class Node:
     afts = ", ".join([a.name for a in self.afters])
     return "<%s befores: %s, afters: %s>" % (self.name, befs, afts)
 
-def parse(file):
+def parse(file, base_duration=0):
   nodes = {}
   for line in file:
     before, after = re.match(r'Step ([A-Z]) must be finished before step ([A-Z]) can begin', line).groups()
 
     if before not in nodes:
-      nodes[before] = Node(before)
+      nodes[before] = Node(before, base_duration=base_duration)
     if after not in nodes:
-      nodes[after] = Node(after)
+      nodes[after] = Node(after, base_duration=base_duration)
 
     nodes[before].add_after(nodes[after])
     nodes[after].add_before(nodes[before])
@@ -65,6 +69,7 @@ class Worker:
 
   def occupy(self, node):
     print(str(self) + ' occupied with ' + node.name)
+    node.occupy()
     self.busy = True
     self.curr_node = node
     self.duration = node.duration
@@ -92,8 +97,6 @@ def order(nodes, workers=1):
   total_nodes = len(nodes.values())
   queue = sorted([n for n in nodes.values()])
   workers = [Worker(i, queue, done_queue) for i in range(workers)]
-  has_busy_workers = False
-
   ticks = 0
 
   while len(done_queue) != total_nodes:
@@ -101,22 +104,21 @@ def order(nodes, workers=1):
       if n.ready():
         # if has available workers,
         avail_workers = [w for w in workers if not w.busy]
-        has_busy_workers = len(avail_workers) > 0
         if len(avail_workers) > 0:
           # put someone to work
-
-          queue.remove(n)
           avail_workers[0].occupy(n)
 
     # advance time
     [w.tick() for w in workers]
     ticks += 1
-    print('tick', ticks)
+    # print('tick', ticks)
 
   return "".join(done_queue), ticks
 
-nodes = parse(open('sample.txt'))
+nodes = parse(open('sample.txt'), 0)
 print(order(nodes, workers=2))
-# assert(order(nodes, workers=1) == 'CABDFE')
+
+nodes = parse(open('input.txt'), 60)
+print(order(nodes, workers=5))
 
 
