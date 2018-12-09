@@ -26,17 +26,6 @@ class Node:
   def visit(self):
     self.visited = True
 
-  def __lt__(self, other):
-    return self.name < other.name
-  def __le__(self, other):
-    return self.name <= other.name
-  def __eq__(self, other):
-    return self.name == other.name
-  def __gt__(self, other):
-    return self.name >= other.name
-  def __ge__(self, other):
-    return self.name >= other.name
-
   def __repr__(self):
     befs = ", ".join([b.name for b in self.befores])
     afts = ", ".join([a.name for a in self.afters])
@@ -77,7 +66,7 @@ def order(nodes, workers=1):
   total_nodes = len(nodes.values())
 
   # sort nodes
-  queue = sorted([n for n in nodes.values()])
+  queue = sorted([n for n in nodes.values()], key=lambda n: n.name)
 
   # create workers
   workers = [Worker(i, queue, done_queue) for i in range(workers)]
@@ -121,4 +110,4 @@ assert(order(nodes, workers=2) == ('CABFDE', 15))
 nodes = parse(open('input.txt'), 60)
 assert(order(nodes, workers=5) == ('FHRXMQSNEGWZIBCLOUATDJPKVY', 917))
 
-
+print('tests pass')
