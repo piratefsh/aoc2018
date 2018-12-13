@@ -54,5 +54,5 @@ def play(nplayers=1, nmarbles=10):
 
 assert(play(9, 25) == 32)
 assert(play(452, 71250) == 388844)
-# print(play(452, 71250 * 100))
+print(play(452, 71250 * 100))
 print('tests pass')
