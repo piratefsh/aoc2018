@@ -1,5 +1,7 @@
 import math
 
+GRID_SIZE = 300
+
 def power(x, y, serial):
 #   Find the fuel cell's rack ID, which is its X coordinate plus 10.
 # Begin with a power level of the rack ID times the Y coordinate.
@@ -22,15 +24,15 @@ def power(x, y, serial):
   return lvl
 
 def make_grid(serial_number):
-  return [[power(row, col, serial_number) for col in range(1, 301)]
-     for row in range(1, 301)]
+  return [[power(row, col, serial_number) for col in range(1, GRID_SIZE+1)]
+     for row in range(1, GRID_SIZE+1)]
 
 def total_power(grid, serial_number, window=3):
   biggest = 0
   pos = (0, 0)
 
-  for row in range(300-window):
-    for col in range(300-window):
+  for row in range(GRID_SIZE-window):
+    for col in range(GRID_SIZE-window):
       window_total = 0
       for i in range(row, row + window):
         for j in range(col, col + window):
@@ -42,23 +44,54 @@ def total_power(grid, serial_number, window=3):
 
   return biggest, pos
 
+def all_window(x, y, grid, serial_number):
+  window_total = 0
+  biggest = 0
+  pos = ()
+
+  # print('xy', x, y)
+
+  for n in range(1, GRID_SIZE - max(x, y)):
+    # print(x + n, end=", ")
+    # breakpoint()
+    # print('size', n)
+    for i in range(n - 1):
+      x1, y1 = (x + i, y + n - 1)
+      window_total += grid[x1][y1]
+      # print(x1, y1)
+
+    for i in range(n - 1):
+      x2, y2 = (x + n - 1, y + i)
+      window_total += grid[x2][y2]
+      # print(x2, y2)
+
+    tx, ty = x + n-1, y + n-1
+    # print(tx, ty)
+    window_total += grid[tx][ty]
+
+    if window_total > biggest:
+      biggest = window_total
+      pos = (x+1, y+1, n)
+
+  return biggest, pos
+
 def biggest_window(grid, serial_number):
   biggest = 0
   res = (0, 0, 0)
-  store = [[0 for col in range(300)] for row in range(300)]
-  for i in range(1, 301):
-    size, pos = total_power(grid, serial_number, i)
 
-    # store the size
-
-    if size > biggest:
-      res = (pos[0], pos[1], i)
-  return res
+  for row in range(GRID_SIZE):
+    for col in range(GRID_SIZE):
+      size, pos = all_window(row, col, grid, serial_number)
+      if size > biggest:
+        biggest = size
+        res = pos
+  return biggest, res
 
 assert(power(3, 5, 8) == 4)
 
-assert(total_power(make_grid(18), 18) == (29, (33,45)))
-assert(total_power(make_grid(42), 42) == (30, (21,61)))
+# assert(total_power(make_grid(18), 18) == (29, (33,45)))
+# assert(total_power(make_grid(42), 42) == (30, (21,61)))
 
-assert(biggest_window(make_grid(18), 18) == (90,269,16))
-# print(total_power(1308))
+# print(biggest_window(make_grid(18), 18))
+# assert(biggest_window(make_grid(18), 18) == (90,269,16))
+print(biggest_window(make_grid(1308), 1308))
