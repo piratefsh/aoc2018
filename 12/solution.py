@@ -31,7 +31,6 @@ def str_state(state):
 def run(state, conditionals, generations=20):
   curr_gen =  state
   offset = 0
-  ori_length = len(curr_gen)
   for g in range(generations):
     print(str_state(curr_gen))
     new_gen = [False] * len(curr_gen)
@@ -47,7 +46,6 @@ def run(state, conditionals, generations=20):
 
   total = 0
   print('offset', offset)
-  print(ori_length, len(curr_gen))
   for i in range(0, len(curr_gen)):
     if curr_gen[i]:
       total += (i - offset)
