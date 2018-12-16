@@ -57,6 +57,7 @@ def move(sprite, sprites, grid, open_squares):
 
   # pick nearest
   pass
+
 def find_open(curr, grid):
   pass
 
@@ -87,6 +88,14 @@ def print_grid(grid):
     for col in row:
       print(col, end="")
     print()
+
+def run(grid, sprites):
+  has_move = True
+  while has_move:
+    has_move = False
+    for s in sprites:
+      has_move = has_move or turn(c, sprites, grid)
+
 
 grid, sprites = parse(open('sample1.txt'))
 print_grid(grid)
