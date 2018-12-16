@@ -43,4 +43,5 @@ def parse(file):
   return grid, carts
 
 grid, carts = parse(open('sample.txt'))
+grid, carts = parse(open('input.txt'))
 print_grid(grid)
