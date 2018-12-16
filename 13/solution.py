@@ -17,6 +17,20 @@ class RailType(Enum):
   NONE = ' '
   CROSSING = '+'
 
+class Cart:
+  def __init__(self, ctype, pos, turn):
+    self.ctype = ctype
+    self.pos = pos
+    self.turn = turn
+
+  def update(self, ctype, pos, turn):
+    self.ctype = ctype
+    self.pos = pos
+    self.turn = turn
+    return self
+
+  def __repr__(self):
+    return "%s" % (self.ctype.value)
 
 def cart_state(char, i, j):
   if char == '>':
@@ -31,17 +45,16 @@ def cart_state(char, i, j):
     raise Exception('Unknown cart type: %s' % char)
 
   track = RailType.EW if ctype is CartType.LEFT or ctype is CartType.RIGHT else RailType.NS
-  return track, (ctype, (i, j), 0)
+  return track, Cart(ctype, (i, j), 0)
 
 
 def print_grid(grid, carts=[]):
   copy = [[c for c in row] for row in grid]
   for c in carts:
-    ctype, pos, _ = c
-    y, x = pos
-    copy[x][y] = ctype
+    y, x = c.pos
+    copy[x][y] = c.ctype
   for row in copy:
-    print("".join([c.value for c in row]))
+    print("".join([str(c.value) for c in row]))
 
 
 def parse(file):
@@ -77,29 +90,31 @@ def parse(file):
   return grid, carts
 
 def update_crossing(cart, npos):
-  ctype, pos, turn = cart
-  if turn == 0:
+  if cart.turn == 0:
     ntype = CartType.RIGHT
-  elif turn == 1:
-    ntype = ctype
-  elif turn == 2:
+  elif cart.turn == 1:
+    ntype = cart.ctype
+  elif cart.turn == 2:
     ntype = CartType.LEFT
   else:
-    raise Exception('Bad turn value %d' % turn)
-  return ntype, npos, (turn + 1) % 3
+    raise Exception('Bad turn value %d' % cart.turn)
+
+  cart.update(ntype, npos, (cart.turn + 1) % 3)
+  return cart
 
 def update_cart(cart, grid):
-  ctype, pos, turn = cart
-  x, y = pos
+  ctype = cart.ctype
+  turn = cart.turn
+  x, y = cart.pos
   if ctype is CartType.RIGHT:
     rnext = grid[y][x + 1]
     npos = (x + 1, y)
     if rnext is RailType.EW:
-      return ctype, npos, turn
+      return cart.update(ctype, npos, turn)
     if rnext is RailType.CURVE_UP:
-      return CartType.UP, npos, turn
+      return cart.update(CartType.UP, npos, turn)
     if rnext is RailType.CURVE_DOWN:
-      return CartType.DOWN, npos, turn
+      return cart.update(CartType.DOWN, npos, turn)
     if rnext is RailType.CROSSING:
       return update_crossing(cart, npos)
 
@@ -107,11 +122,11 @@ def update_cart(cart, grid):
     rnext = grid[y][x - 1]
     npos = (x - 1, y)
     if rnext is RailType.EW:
-      return ctype, npos, turn
+      return cart.update(ctype, npos, turn)
     if rnext is RailType.CURVE_UP:
-      return CartType.DOWN, npos, turn
+      return cart.update(CartType.DOWN, npos, turn)
     if rnext is RailType.CURVE_DOWN:
-      return CartType.UP, npos, turn
+      return cart.update(CartType.UP, npos, turn)
     if rnext is RailType.CROSSING:
       return update_crossing(cart, npos)
 
@@ -119,11 +134,11 @@ def update_cart(cart, grid):
     rnext = grid[y - 1][x]
     npos = (x, y - 1)
     if rnext is RailType.NS:
-      return ctype, npos, turn
+      return cart.update(ctype, npos, turn)
     if rnext is RailType.CURVE_UP:
-      return CartType.RIGHT, npos, turn
+      return cart.update(CartType.RIGHT, npos, turn)
     if rnext is RailType.CURVE_DOWN:
-      return CartType.LEFT, npos, turn
+      return cart.update(CartType.LEFT, npos, turn)
     if rnext is RailType.CROSSING:
       return update_crossing(cart, npos)
 
@@ -131,11 +146,11 @@ def update_cart(cart, grid):
     rnext = grid[y + 1][x]
     npos = (x, y + 1)
     if rnext is RailType.NS:
-      return ctype, npos, turn
+      return cart.update(ctype, npos, turn)
     if rnext is RailType.CURVE_UP:
-      return CartType.LEFT, npos, turn
+      return cart.update(CartType.LEFT, npos, turn)
     if rnext is RailType.CURVE_DOWN:
-      return CartType.RIGHT, npos, turn
+      return cart.update(CartType.RIGHT, npos, turn)
     if rnext is RailType.CROSSING:
       return update_crossing(cart, npos)
 
@@ -143,39 +158,29 @@ def update_cart(cart, grid):
     raise Exception("Don't know how to handle cart, help")
 
 def sort_carts(carts):
-  return sorted(carts, key=lambda c: c[1])
+  return sorted(carts, key=lambda c: c.pos)
 
 def check_crash(cart, carts):
-  for other in carts:
-    _, opos, _ = other
-    _, cpos, _ = cart
-
-    if opos == cpos:
-      return opos
+  for o in carts:
+    if o is not cart and o.pos == cart.pos:
+      return o.pos
   return False
 
 def step(carts, grid):
-  updated_carts = []
-  for c in sort_carts(carts):
+  carts = sorted_carts(carts)
+  for c in scarts:
     cart = update_cart(c, grid)
-    if cart:
-      updated_carts.append(cart)
-  carts = updated_carts
   return carts, grid
 
 def run(carts, grid):
   while True:
-    updated_carts = []
-
-    for c in sort_carts(carts):
-      cart = update_cart(c, grid)
-      if cart:
-        crash = check_crash(cart, updated_carts)
-        if crash:
-          return crash
-        updated_carts.append(cart)
-    carts = updated_carts
     # print_grid(grid, carts)
+    carts = sort_carts(carts)
+    for c in carts:
+      cart = update_cart(c, grid)
+      crash = check_crash(cart, carts)
+      if crash:
+        return crash
 
 # grid, carts = parse(open('sample.txt'))
 grid, carts = parse(open('input.txt'))
