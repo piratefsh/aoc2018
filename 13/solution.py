@@ -38,7 +38,7 @@ def print_grid(grid, carts=[]):
   copy = [[c for c in row] for row in grid]
   for c in carts:
     ctype, pos, _ = c
-    x, y = pos
+    y, x = pos
     copy[x][y] = ctype
   for row in copy:
     print("".join([c.value for c in row]))
@@ -54,7 +54,7 @@ def parse(file):
     for j in range(len(lines[i])):
       char = lines[i][j]
       if char in "<>v^":
-        track, cart = cart_state(char, i, j)
+        track, cart = cart_state(char, j, i)
         grid[i][j] = track
         carts.append(cart)
       else:
@@ -92,8 +92,8 @@ def update_cart(cart, grid):
   ctype, pos, turn = cart
   x, y = pos
   if ctype is CartType.RIGHT:
-    rnext = grid[x][y + 1]
-    npos = (x, y + 1)
+    rnext = grid[y][x + 1]
+    npos = (x + 1, y)
     if rnext is RailType.EW:
       return ctype, npos, turn
     if rnext is RailType.CURVE_UP:
@@ -104,8 +104,8 @@ def update_cart(cart, grid):
       return update_crossing(cart, npos)
 
   elif ctype is CartType.LEFT:
-    rnext = grid[x][y - 1]
-    npos = (x, y - 1)
+    rnext = grid[y][x - 1]
+    npos = (x - 1, y)
     if rnext is RailType.EW:
       return ctype, npos, turn
     if rnext is RailType.CURVE_UP:
@@ -116,8 +116,8 @@ def update_cart(cart, grid):
       return update_crossing(cart, npos)
 
   elif ctype is CartType.UP:
-    rnext = grid[x - 1][y]
-    npos = (x - 1, y)
+    rnext = grid[y - 1][x]
+    npos = (x, y - 1)
     if rnext is RailType.NS:
       return ctype, npos, turn
     if rnext is RailType.CURVE_UP:
@@ -128,8 +128,8 @@ def update_cart(cart, grid):
       return update_crossing(cart, npos)
 
   elif ctype is CartType.DOWN:
-    rnext = grid[x + 1][y]
-    npos = (x + 1, y)
+    rnext = grid[y + 1][x]
+    npos = (x, y + 1)
     if rnext is RailType.NS:
       return ctype, npos, turn
     if rnext is RailType.CURVE_UP:
@@ -175,10 +175,10 @@ def run(carts, grid):
           return crash
         updated_carts.append(cart)
     carts = updated_carts
-    print_grid(grid, carts)
+    # print_grid(grid, carts)
 
-grid, carts = parse(open('sample.txt'))
-# grid, carts = parse(open('input.txt'))
+# grid, carts = parse(open('sample.txt'))
+grid, carts = parse(open('input.txt'))
 print(carts)
 print_grid(grid, carts)
 
