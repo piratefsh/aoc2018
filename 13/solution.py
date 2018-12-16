@@ -27,12 +27,16 @@ class Cart:
     self.ctype = ctype
     self.pos = pos
     self.turn = turn
+    self.removed = False
 
   def update(self, ctype, pos, turn):
     self.ctype = ctype
     self.pos = pos
     self.turn = turn
     return self
+
+  def remove(self):
+    self.removed = True
 
   def __repr__(self):
     return "%d: %s (%d, %d)" % (self.id, self.ctype.value, *self.pos)
@@ -165,12 +169,12 @@ def update_cart(cart, grid):
     raise Exception("Don't know how to handle cart, help")
 
 def sort_carts(carts):
-  return sorted(carts, key=lambda c: c.pos)
+  return [c for c in sorted(carts, key=lambda c: c.pos) if c.removed is False]
 
 def check_crash(cart, carts):
   for o in carts:
     if o is not cart and o.pos == cart.pos:
-      return o.pos
+      return o
   return False
 
 def step(carts, grid):
@@ -179,23 +183,27 @@ def step(carts, grid):
     cart = update_cart(c, grid)
   return carts, grid
 
-def run(carts, grid):
-  rounds = 0
+def run(carts, grid, remove=False):
   while True:
-    rounds += 1
-    # print_grid(grid, carts)
     carts = sort_carts(carts)
-    # print(carts)
-    # print()
+    if len(carts) == 1:
+      return carts[0]
+
+    crash = None
     for c in carts:
       cart = update_cart(c, grid)
       crash = check_crash(cart, carts)
       if crash:
-        return rounds, crash
+        if not remove:
+          return crash
+        else:
+          c.remove()
+          crash.remove()
 
-# grid, carts = parse(open('sample.txt'))
+
+# grid, carts = parse(open('sample2.txt'))
 grid, carts = parse(open('input.txt'))
-print(carts)
 # print_grid(grid, carts)
 
-print(run(carts, grid))
+print('crash', run(carts, grid))
+print('last one standing', run(carts, grid, True))
