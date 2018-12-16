@@ -10,12 +10,17 @@ class SpriteType(Enum):
   ELF = 'E'
 
 class Entity:
-  def __init__(self, etype, occupant=None):
+  def __init__(self, etype, pos, occupant=None):
+    self.pos = pos
     self.type = etype
     self.occupant = occupant
+    self.visited = False
 
   def is_open(self):
     return self.type is not CellType.WALL and self.occupant is None
+
+  def is_not_wall(self):
+    return self.type is not CellType.WALL
 
   def __repr__(self):
     if self.occupant is None:
@@ -25,8 +30,7 @@ class Entity:
 
 class Sprite(Entity):
   def __init__(self, stype, pos):
-    Entity.__init__(self, stype);
-    self.pos = pos
+    Entity.__init__(self, stype, pos);
     self.ap = 3
     self.hp = 200
     self.dead = False
@@ -46,16 +50,16 @@ def parse(file):
     row = []
     for x, c in enumerate(yrow.strip()):
       if c == '#':
-        row.append(Entity(CellType.WALL))
+        row.append(Entity(CellType.WALL, (x, y), None))
       elif c == '.':
-        row.append(Entity(CellType.NONE))
+        row.append(Entity(CellType.NONE, (x, y), None))
       elif c == 'G':
         sprite = Sprite(SpriteType.GOBLIN, (x, y))
-        row.append(Entity(CellType.NONE, sprite))
+        row.append(Entity(CellType.NONE, (x, y), sprite))
         sprites.append(sprite)
       elif c == 'E':
         sprite = Sprite(SpriteType.ELF, (x, y))
-        row.append(Entity(CellType.NONE, sprite))
+        row.append(Entity(CellType.NONE, (x, y), sprite))
         sprites.append(sprite)
       else:
         raise Exception('Unknown entity %s' % c)
@@ -65,19 +69,30 @@ def parse(file):
 def sort(entities):
   return sorted(entities, key=lambda x: x.pos)
 
-def bfs(sprite, grid, targets):
-  queue = [sprite]
+def bfs(start, grid, targets):
+  queue = [(start, 0)]
   found = dict()
-  while len(queue) > 1:
+  while len(queue) > 0 and len(targets) > 0:
     curr, dist = queue.pop(0)
+    curr.visited = True
 
     if curr in targets:
       targets.remove(curr)
-      found[curr] = dist
+      found[curr] = dist if not curr in found or dist < found[curr] else dist
 
     # add neighbours
+    x, y = curr.pos
     neighbours = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
-    queue += [grid[y][x] for x, y in neighbours if grid[y][x].is_open()]
+    queue += [(grid[y][x], dist+1) for x, y in neighbours
+      if y < len(grid) and x < len(grid[0]) and
+        grid[y][x].is_not_wall() and
+         not grid[y][x].visited]
+
+  #  unmark all visited
+  for row in grid:
+    for col in row:
+      col.visited = False
+
   return found
 
 def move(sprite, sprites, grid, open_squares):
@@ -145,7 +160,8 @@ def run(grid, sprites):
     # remove dead players
     sprites = [s for s in sprites if not s.dead]
 
-grid, sprites = parse(open('sample1.txt'))
+# grid, sprites = parse(open('sample1.txt'))
+grid, sprites = parse(open('input.txt'))
 print_grid(grid)
 
-print(bfs(sprites[0], grid, [sprites[1]]))
+print(bfs(grid[1][1], grid, [grid[1][9]]))
