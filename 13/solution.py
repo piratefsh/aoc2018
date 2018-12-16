@@ -17,8 +17,13 @@ class RailType(Enum):
   NONE = ' '
   CROSSING = '+'
 
+ID_COUNTER = 0
 class Cart:
+
   def __init__(self, ctype, pos, turn):
+    global ID_COUNTER
+    ID_COUNTER += 1
+    self.id = ID_COUNTER
     self.ctype = ctype
     self.pos = pos
     self.turn = turn
@@ -30,7 +35,7 @@ class Cart:
     return self
 
   def __repr__(self):
-    return "%s" % (self.ctype.value)
+    return "%d: %s (%d, %d)" % (self.id, self.ctype.value, *self.pos)
 
 def cart_state(char, i, j):
   if char == '>':
@@ -90,12 +95,14 @@ def parse(file):
   return grid, carts
 
 def update_crossing(cart, npos):
+  direction = [CartType.LEFT, CartType.UP, CartType.RIGHT, CartType.DOWN]
+  curr_idx = direction.index(cart.ctype)
   if cart.turn == 0:
-    ntype = CartType.RIGHT
+    ntype = direction[(curr_idx - 1) % len(direction)]
   elif cart.turn == 1:
     ntype = cart.ctype
   elif cart.turn == 2:
-    ntype = CartType.LEFT
+    ntype = direction[(curr_idx + 1) % len(direction)]
   else:
     raise Exception('Bad turn value %d' % cart.turn)
 
@@ -173,19 +180,22 @@ def step(carts, grid):
   return carts, grid
 
 def run(carts, grid):
+  rounds = 0
   while True:
+    rounds += 1
     # print_grid(grid, carts)
     carts = sort_carts(carts)
+    # print(carts)
+    # print()
     for c in carts:
       cart = update_cart(c, grid)
       crash = check_crash(cart, carts)
       if crash:
-        return crash
+        return rounds, crash
 
 # grid, carts = parse(open('sample.txt'))
 grid, carts = parse(open('input.txt'))
 print(carts)
-print_grid(grid, carts)
+# print_grid(grid, carts)
 
 print(run(carts, grid))
-# step(*step(*step(carts, grid)))
