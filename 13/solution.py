@@ -205,5 +205,5 @@ def run(carts, grid, remove=False):
 grid, carts = parse(open('input.txt'))
 # print_grid(grid, carts)
 
-print('crash', run(carts, grid))
-print('last one standing', run(carts, grid, True))
+print('part a: crash', run(carts, grid))
+print('part b: last one standing', run(carts, grid, True))
