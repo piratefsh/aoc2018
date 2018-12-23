@@ -242,6 +242,7 @@ def run(grid, sprites, steps = 28):
   counter = 0
   while counter <= steps:
     print('\nROUND', counter)
+    print(sprites)
     print_grid(grid)
     has_move, grid, sprites = update(grid, sprites)
     counter += 1
