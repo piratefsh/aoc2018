@@ -95,7 +95,7 @@ def bfs(start, grid, targets):
     neighbours = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
     queue += [(grid[y][x], dist+1) for x, y in neighbours
       if y < len(grid) and x < len(grid[0]) and
-        grid[y][x].is_not_wall() and
+        grid[y][x].is_open() and
          not grid[y][x].visited and
          not grid[y][x] in queue]
 
@@ -106,7 +106,7 @@ def bfs(start, grid, targets):
 
   return found
 
-def neartest_reachable(reachable):
+def nearest_reachable(reachable):
   sreach = sorted(reachable.keys(), key=lambda x: reachable[x])
   nearest_key = sreach[0]
   nearest_dist = reachable[nearest_key]
@@ -122,7 +122,7 @@ def best_move(sprite, grid, open_squares):
   if len(reachable.keys()) < 1:
     return False
 
-  nearest = neartest_reachable(reachable)
+  nearest = nearest_reachable(reachable)
 
   # for all surroundings, find one with nearest manhattan distance
   x, y = sprite.pos
@@ -132,7 +132,7 @@ def best_move(sprite, grid, open_squares):
     cell = grid[y][x]
     surrounding_dists[cell] = mdist(cell.pos, nearest.pos)
 
-  nearest_next_move = neartest_reachable(surrounding_dists)
+  nearest_next_move = nearest_reachable(surrounding_dists)
   # breakpoint()
   return nearest_next_move
 
@@ -149,7 +149,28 @@ def mdist(a, b):
   x2, y2 = b
   return abs(x2-x1) + abs(y2-y1)
 
+def attempt_attack(curr, targets):
+  # find in_range_targets, i.e. targets one step away
+  in_range_targets = [t for t in targets if mdist(t.pos, curr.pos) <= 1]
+
+  # if has in_range_target
+  if len(in_range_targets) > 0:
+
+    # attack target with lowest hp in reading order sort
+    target_hps = {}
+    for r in in_range_targets:
+      target_hps[r] = r.hp
+
+    target = nearest_reachable(target_hps)
+
+    curr.attack(target)
+    return True
+
 def turn(curr, sprites, grid):
+  if curr.dead:
+    return False
+
+  made_move = False
   #  find all targets
   targets = [s for s in sprites if s.type is not curr.type]
 
@@ -158,25 +179,12 @@ def turn(curr, sprites, grid):
   for t in targets:
     open_squares += find_open(t, grid)
 
-  # find in_range_targets, i.e. targets one step away
-  in_range_targets = [t for t in targets if mdist(t.pos, curr.pos) <= 1]
-
-  # print(curr, curr.pos, targets)
-  # print('open_squares', open_squares)
-
-  if len(open_squares) < 1 and len(in_range_targets) < 1:
-    # print('no move')
-    # end turn
-    return False
-
-  # if has in_range_target
-  if len(in_range_targets) > 0:
-    # attack target with lowest hp in reading order sort
-    target = sorted(sort(in_range_targets), key=lambda x: x.hp)
-    # print('in range targets', target)
-    curr.attack(target)
+  # try to attack
+  made_move = attempt_attack(curr, targets)
+  if made_move:
     return True
-  else:
+
+  elif len(open_squares) > 0:
     # move
     x, y = curr.pos
     best_cell = best_move(grid[y][x], grid, open_squares)
@@ -184,10 +192,11 @@ def turn(curr, sprites, grid):
     # print('best move', best_cell.pos)
     if best_cell:
       move_to(curr, best_cell)
-      return True
+      made_move = True
+      attempt_attack(curr, targets)
 
   # print('no move!')
-  return False
+  return made_move
 
 def move_to(sprite, cell):
   x, y = sprite.pos
@@ -198,6 +207,7 @@ def move_to(sprite, cell):
 def remove_from(s, grid):
   x, y = s.pos
   grid[y][x].remove_occupant()
+  print_grid(grid)
 
 def print_grid(grid):
   print('  ', end="")
@@ -206,9 +216,12 @@ def print_grid(grid):
   print()
   for i, row in enumerate(grid):
     print(i, end=" ")
+    stats = ""
     for col in row:
       print(col, end="")
-    print()
+      if col.occupant is not None:
+        stats += "%s(%d)," % (str(col.occupant), col.occupant.hp)
+    print('    ', stats)
 
 def update(grid, sprites):
   has_move = False
@@ -216,24 +229,26 @@ def update(grid, sprites):
     res = turn(s, sprites, grid)
     has_move = has_move or res
 
-    dead = [s for s in sprites if s.dead]
-    for d in dead:
-      remove_from(s, grid)
-      sprites.remove(d)
-
-  return has_move
-
-def run(grid, sprites, steps = 4):
-  has_move = True
-
-  while steps > 0:
-    steps -= 1
+  dead = [s for s in sprites if s.dead]
+  sprites = [s for s in sprites if not s.dead]
+  for d in dead:
+    remove_from(d, grid)
     print_grid(grid)
-    has_move = update(grid, sprites)
+
+  return has_move, grid, sprites
+
+def run(grid, sprites, steps = 28):
+  has_move = True
+  counter = 0
+  while counter <= steps:
+    print('\nROUND', counter)
+    print_grid(grid)
+    has_move, grid, sprites = update(grid, sprites)
+    counter += 1
 
 
 grid, sprites = parse(open('input.txt'))
 grid, sprites = parse(open('sample1.txt'))
-print_grid(grid)
+grid, sprites = parse(open('sample2.txt'))
 run(grid, sprites)
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
