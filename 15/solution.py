@@ -91,13 +91,10 @@ def bfs(start, grid, targets):
       found[curr] = dist if not curr in found or dist < found[curr] else dist
 
     # add neighbours
-    x, y = curr.pos
-    neighbours = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
-    queue += [(grid[y][x], dist+1) for x, y in neighbours
-      if y < len(grid) and x < len(grid[0]) and
-        grid[y][x].is_open() and
-         not grid[y][x].visited and
-         not grid[y][x] in queue]
+    neighbours = get_open_neighbours(curr, grid)
+    queue += [(n, dist+1) for n in neighbours
+      if not n.visited and
+         not n in queue]
 
   #  unmark all visited
   for row in grid:
@@ -106,7 +103,7 @@ def bfs(start, grid, targets):
 
   return found
 
-def nearest_reachable(reachable):
+def find_min(reachable):
   sreach = sorted(reachable.keys(), key=lambda x: reachable[x])
   nearest_key = sreach[0]
   nearest_dist = reachable[nearest_key]
@@ -115,6 +112,13 @@ def nearest_reachable(reachable):
   other_nearest = [k for k in reachable.keys() if reachable[k] == nearest_dist]
   return sort(other_nearest)[0]
 
+def get_open_neighbours(sprite, grid):
+  x, y = sprite.pos
+  surroundings = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
+  return [grid[y][x] for x, y in surroundings if
+    y < len(grid) and x < len(grid[0]) and
+    grid[y][x].is_open()]
+
 def best_move(sprite, grid, open_squares):
   # find shortest distance to each open square
     # do bfs to find all squares it can reach
@@ -122,18 +126,15 @@ def best_move(sprite, grid, open_squares):
   if len(reachable.keys()) < 1:
     return False
 
-  nearest = nearest_reachable(reachable)
+  nearest = find_min(reachable)
 
   # for all surroundings, find one with nearest manhattan distance
-  x, y = sprite.pos
-  surroundings = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
+  surroundings = get_open_neighbours(sprite, grid)
   surrounding_dists = {}
-  for x, y in surroundings:
-    cell = grid[y][x]
+  for cell in surroundings:
     surrounding_dists[cell] = mdist(cell.pos, nearest.pos)
 
-  nearest_next_move = nearest_reachable(surrounding_dists)
-  # breakpoint()
+  nearest_next_move = find_min(surrounding_dists)
   return nearest_next_move
 
 def find_open(curr, grid):
@@ -161,7 +162,7 @@ def attempt_attack(curr, targets):
     for r in in_range_targets:
       target_hps[r] = r.hp
 
-    target = nearest_reachable(target_hps)
+    target = find_min(target_hps)
 
     curr.attack(target)
     return True
@@ -188,7 +189,7 @@ def turn(curr, sprites, grid):
     # move
     x, y = curr.pos
     best_cell = best_move(grid[y][x], grid, open_squares)
-
+    print('best_cell', curr, curr.pos, best_cell)
     # print('best move', best_cell.pos)
     if best_cell:
       move_to(curr, best_cell)
@@ -250,6 +251,6 @@ def run(grid, sprites, steps = 28):
 
 grid, sprites = parse(open('input.txt'))
 grid, sprites = parse(open('sample1.txt'))
-grid, sprites = parse(open('sample2.txt'))
+grid, sprites = parse(open('sample3.txt'))
 run(grid, sprites)
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
