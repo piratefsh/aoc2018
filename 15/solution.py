@@ -1,6 +1,11 @@
 from enum import Enum
 import math
 
+DEBUG= True
+
+class NoTargetsException(Exception):
+  pass
+
 class CellType(Enum):
   WALL = '#'
   NONE = '.'
@@ -80,10 +85,13 @@ def sort(entities):
   return sorted(entities, key=lambda x: (x.pos[1], x.pos[0]))
 
 def bfs(start, grid, targets):
-  queue = [(start, 0)]
+  queue = [start]
+  queue_dist = [0]
   found = dict()
   while len(queue) > 0 and len(targets) > 0:
-    curr, dist = queue.pop(0)
+    # print(len(queue), len(targets), len(grid) * len(grid[0]))
+    curr = queue.pop(0)
+    dist = queue_dist.pop(0)
     curr.visited = True
 
     if curr in targets:
@@ -92,9 +100,10 @@ def bfs(start, grid, targets):
 
     # add neighbours
     neighbours = get_open_neighbours(curr, grid)
-    queue += [(n, dist+1) for n in neighbours
-      if not n.visited and
-         not n in queue]
+    for n in neighbours:
+      if not n.visited and not n in queue:
+        queue.append(n)
+        queue_dist.append(dist + 1)
 
   #  unmark all visited
   for row in grid:
@@ -136,7 +145,6 @@ def best_move(sprite, grid, open_squares):
     if len(reachable.keys()) > 0:
       surrounding_dists[cell] = reachable[nearest]
 
-  print(surrounding_dists)
   nearest_next_move = find_min(surrounding_dists)
   return nearest_next_move
 
@@ -160,27 +168,26 @@ def attempt_attack(curr, targets):
   # if has in_range_target
   if len(in_range_targets) > 0:
 
-    # attack target with lowest hp in reading order sort
+    # attack target with lowest hp
     target_hps = {}
     for r in in_range_targets:
       target_hps[r] = r.hp
 
     target = find_min(target_hps)
-
     curr.attack(target)
+
     return True
 
 def turn(curr, sprites, grid):
-  print(curr, curr.hp)
   if curr.dead:
     return False
 
   made_move = False
   #  find all targets
-  targets = [s for s in sprites if s.type is not curr.type]
+  targets = [s for s in sprites if s.type is not curr.type and not s.dead]
 
   if(len(targets) < 1):
-    raise Exception('game end')
+    raise NoTargetsException('game end')
 
   # find open_squares in range of targets
   open_squares = []
@@ -197,7 +204,7 @@ def turn(curr, sprites, grid):
     x, y = curr.pos
     best_cell = best_move(grid[y][x], grid, open_squares)
     if best_cell:
-      print('best_cell', curr, curr.pos, 'to', best_cell.pos)
+      # print('best_cell', curr, curr.pos, 'to', best_cell.pos)
       move_to(curr, best_cell)
       made_move = True
       attempt_attack(curr, targets)
@@ -229,34 +236,48 @@ def print_grid(grid):
         stats += "%s(%d)," % (str(col.occupant), col.occupant.hp)
     print('    ', stats)
 
-def update(grid, sprites):
-  has_move = False
-  for s in sprites:
-    res = turn(s, sprites, grid)
-    has_move = has_move or res
-
+def clear_dead(sprites, grid):
   dead = [s for s in sprites if s.dead]
   sprites = [s for s in sprites if not s.dead]
   for d in dead:
     remove_from(d, grid)
+def update(grid, sprites):
+  for s in sprites:
+    try:
+      res = turn(s, sprites, grid)
+    except NoTargetsException as e:
+      clear_dead(sprites, grid)
+      return True, grid, sort(sprites)
 
-  return has_move, grid, sort(sprites)
+  clear_dead(sprites, grid)
+  return False, grid, sort(sprites)
 
 def run(grid, sprites, steps = 47):
-  has_move = True
+  done = False
   counter = 0
-  while True:
-    print('\nROUND', counter)
-    print_grid(grid)
-    try:
-      has_move, grid, sprites = update(grid, sprites)
-    except Exception as e:
-      print(e)
+  while not done:
+    if DEBUG:
+      print('\nROUND', counter)
+      print_grid(grid)
+    done, grid, sprites = update(grid, sprites)
     counter += 1
 
+  print_grid(grid)
+  hps = sum([s.hp for s in sprites if not s.dead])
+  print('remaining hp, rounds', hps, counter)
+  return  hps * counter
 
+
+# grid, sprites = parse(open('sample1.txt'))
+# grid, sprites = parse(open('sample2.txt'))
+# assert(run(grid, sprites) == 27730)
+# grid, sprites = parse(open('sample4.txt'))
+# assert(run(grid, sprites) == 36334)
+
+# grid, sprites = parse(open('sample5.txt'))
+# assert(run(grid, sprites) == 18740)
+# grid, sprites = parse(open('sample6.txt'))
+# assert(run(grid, sprites) == 28944)
 grid, sprites = parse(open('input.txt'))
-grid, sprites = parse(open('sample1.txt'))
-grid, sprites = parse(open('sample2.txt'))
-run(grid, sprites)
+print(run(grid, sprites))
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
