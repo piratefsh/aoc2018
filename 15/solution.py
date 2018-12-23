@@ -260,7 +260,6 @@ def run(grid, sprites):
   done = False
   counter = 0
   while not done:
-    # time.sleep(1)
     if DEBUG:
       print('\nROUND', counter)
       print_grid(grid)
