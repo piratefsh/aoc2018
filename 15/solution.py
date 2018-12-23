@@ -248,15 +248,15 @@ def run(grid, sprites, steps = 47):
   while True:
     print('\nROUND', counter)
     print_grid(grid)
-    has_move, grid, sprites = update(grid, sprites)
+    try:
+      has_move, grid, sprites = update(grid, sprites)
+    except Exception as e:
+      print(e)
     counter += 1
 
 
 grid, sprites = parse(open('input.txt'))
 grid, sprites = parse(open('sample1.txt'))
 grid, sprites = parse(open('sample2.txt'))
-try:
-  run(grid, sprites)
-except Exception as e:
-  print(e)
+run(grid, sprites)
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
