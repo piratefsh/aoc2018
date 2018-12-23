@@ -268,16 +268,16 @@ def run(grid, sprites, steps = 47):
   return  hps * counter
 
 
-# grid, sprites = parse(open('sample1.txt'))
-# grid, sprites = parse(open('sample2.txt'))
-# assert(run(grid, sprites) == 27730)
-# grid, sprites = parse(open('sample4.txt'))
-# assert(run(grid, sprites) == 36334)
+grid, sprites = parse(open('sample1.txt'))
+grid, sprites = parse(open('sample2.txt'))
+assert(run(grid, sprites) == 27730)
+grid, sprites = parse(open('sample4.txt'))
+assert(run(grid, sprites) == 36334)
 
-# grid, sprites = parse(open('sample5.txt'))
-# assert(run(grid, sprites) == 18740)
-# grid, sprites = parse(open('sample6.txt'))
-# assert(run(grid, sprites) == 28944)
+grid, sprites = parse(open('sample5.txt'))
+assert(run(grid, sprites) == 18740)
+grid, sprites = parse(open('sample6.txt'))
+assert(run(grid, sprites) == 28944)
 grid, sprites = parse(open('input.txt'))
-print(run(grid, sprites))
+# print(run(grid, sprites))
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
