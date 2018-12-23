@@ -189,8 +189,7 @@ def turn(curr, sprites, grid):
     # move
     x, y = curr.pos
     best_cell = best_move(grid[y][x], grid, open_squares)
-    print('best_cell', curr, curr.pos, best_cell)
-    # print('best move', best_cell.pos)
+    print('best_cell', curr, curr.pos, 'to', best_cell.pos)
     if best_cell:
       move_to(curr, best_cell)
       made_move = True
