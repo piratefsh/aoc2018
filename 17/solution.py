@@ -21,25 +21,38 @@ def parse(file):
   return clay
 
 def make_grid(clays):
-  miny = min([min(clay.y) for clay in clays])
-  maxy = max([max(clay.y) for clay in clays])
+  miny = min([min(clay.y) for clay in clays]) - 1
+  maxy = max([max(clay.y) for clay in clays]) + 1
   minx = min([min(clay.x) for clay in clays]) - 1
   maxx = max([max(clay.x) for clay in clays]) + 1
+
   grid = {}
   for x in range(minx, maxx):
     for y in range(miny, maxy):
       grid[(x, y)] = '.'
 
-  for vein in clays:
+  grid['dims'] = {
+    'min': (minx, miny),
+    'max': (maxx, maxy)
+  }
 
+  for sex, sey in clays:
+    sx, ex = sex
+    sy, ey = sey
+    for x in range(sx, ex + 1):
+      for y in range(sy, ey + 1):
+        grid[(x, y)] = '#'
+
+    pass
 
   return grid
 
 def print_grid(grid):
-  minx, miny = min(grid.keys())
-  maxx, maxy = max(grid.keys())
-  for x in range(minx, maxx):
-    for y in range(miny, maxy):
+  minx, miny = grid['dims']['min']
+  maxx, maxy = grid['dims']['max']
+  print('dimensions', minx, maxx, miny , maxy)
+  for y in range(miny, maxy):
+    for x in range(minx, maxx):
       print(grid[(x, y)], end="")
     print()
 
