@@ -6,7 +6,10 @@ Clay = namedtuple('Clay', "x, y")
 def parse_coord(cstr, var):
   pattern = re.compile(var + '=([0-9.]*)')
   coord = re.match(pattern, cstr).groups()[0]
-  return [int(c) for c in coord.split('..')]
+  ranges = [int(c) for c in coord.split('..')]
+  if len(ranges) == 1:
+    return ranges * 2
+  return ranges
 
 def parse(file):
   clay = []
@@ -27,6 +30,9 @@ def make_grid(clays):
     for y in range(miny, maxy):
       grid[(x, y)] = '.'
 
+  for vein in clays:
+
+
   return grid
 
 def print_grid(grid):
@@ -38,4 +44,5 @@ def print_grid(grid):
     print()
 
 clays = parse(open('sample.txt'))
+print(clays)
 print_grid(make_grid(clays))
