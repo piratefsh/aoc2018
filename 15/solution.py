@@ -120,7 +120,7 @@ def bfs(start, grid, targets):
 
     if curr in targets:
       targets.remove(curr)
-      found[curr] = dist if not curr in found or dist < found[curr] else dist
+      found[curr] = dist
 
     # add neighbours
     neighbours = get_open_neighbours(curr, grid)
