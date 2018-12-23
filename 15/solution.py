@@ -1,6 +1,6 @@
 from enum import Enum
 import math
-
+import time
 DEBUG= True
 
 class NoTargetsException(Exception):
@@ -84,6 +84,19 @@ def parse(file):
 def sort(entities):
   return sorted(entities, key=lambda x: (x.pos[1], x.pos[0]))
 
+# manhattan distance
+def mdist(a, b):
+  x1, y1 = a
+  x2, y2 = b
+  return abs(x2-x1) + abs(y2-y1)
+
+def find_open(curr, grid):
+  x, y = curr.pos
+  # find N, S, E, W squares
+  surroundings = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
+
+  return [grid[j][i] for i, j in surroundings if grid[j][i].is_open()]
+
 def bfs(start, grid, targets):
   queue = [start]
   queue_dist = [0]
@@ -148,35 +161,21 @@ def best_move(sprite, grid, open_squares):
   nearest_next_move = find_min(surrounding_dists)
   return nearest_next_move
 
-def find_open(curr, grid):
-  x, y = curr.pos
-  # find N, S, E, W squares
-  surroundings = [(x, y+1), (x, y-1), (x+1, y), (x-1, y)]
-
-  return [grid[j][i] for i, j in surroundings if grid[j][i].is_open()]
-
-# manhattan distance
-def mdist(a, b):
-  x1, y1 = a
-  x2, y2 = b
-  return abs(x2-x1) + abs(y2-y1)
 
 def attempt_attack(curr, targets):
   # find in_range_targets, i.e. targets one step away
-  in_range_targets = [t for t in targets if mdist(t.pos, curr.pos) <= 1]
+  in_range_targets = [t for t in targets if mdist(t.pos, curr.pos) == 1]
 
   # if has in_range_target
   if len(in_range_targets) > 0:
-
     # attack target with lowest hp
     target_hps = {}
     for r in in_range_targets:
       target_hps[r] = r.hp
-
     target = find_min(target_hps)
     curr.attack(target)
-
     return True
+  return False
 
 def turn(curr, sprites, grid):
   if curr.dead:
@@ -241,21 +240,21 @@ def clear_dead(sprites, grid):
   sprites = [s for s in sprites if not s.dead]
   for d in dead:
     remove_from(d, grid)
-def update(grid, sprites):
-  for s in sprites:
-    try:
-      res = turn(s, sprites, grid)
-    except NoTargetsException as e:
-      clear_dead(sprites, grid)
-      return True, grid, sort(sprites)
+  return sprites
 
-  clear_dead(sprites, grid)
-  return False, grid, sort(sprites)
+def update(grid, sprites):
+  for s in sort(sprites):
+    try:
+      res = turn(s, clear_dead(sprites, grid), grid)
+    except NoTargetsException as e:
+      return True, grid, clear_dead(sprites, grid)
+  return False, grid, clear_dead(sprites, grid)
 
 def run(grid, sprites, steps = 47):
   done = False
   counter = 0
   while not done:
+    # time.sleep(1)
     if DEBUG:
       print('\nROUND', counter)
       print_grid(grid)
@@ -265,19 +264,23 @@ def run(grid, sprites, steps = 47):
   print_grid(grid)
   hps = sum([s.hp for s in sprites if not s.dead])
   print('remaining hp, rounds', hps, counter)
-  return  hps * counter
+  return  hps * (counter-1)
 
 
 grid, sprites = parse(open('sample1.txt'))
+
 grid, sprites = parse(open('sample2.txt'))
 assert(run(grid, sprites) == 27730)
 grid, sprites = parse(open('sample4.txt'))
 assert(run(grid, sprites) == 36334)
-
 grid, sprites = parse(open('sample5.txt'))
 assert(run(grid, sprites) == 18740)
 grid, sprites = parse(open('sample6.txt'))
 assert(run(grid, sprites) == 28944)
+grid, sprites = parse(open('sample7.txt'))
+assert(run(grid, sprites) == 27755)
+grid, sprites = parse(open('sample8.txt'))
+assert(run(grid, sprites) == 39514)
 grid, sprites = parse(open('input.txt'))
-# print(run(grid, sprites))
+print(run(grid, sprites)) #206175
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
