@@ -132,8 +132,11 @@ def best_move(sprite, grid, open_squares):
   surroundings = get_open_neighbours(sprite, grid)
   surrounding_dists = {}
   for cell in surroundings:
-    surrounding_dists[cell] = mdist(cell.pos, nearest.pos)
+    reachable = bfs(cell, grid, [nearest])
+    if len(reachable.keys()) > 0:
+      surrounding_dists[cell] = reachable[nearest]
 
+  print(surrounding_dists)
   nearest_next_move = find_min(surrounding_dists)
   return nearest_next_move
 
@@ -168,12 +171,16 @@ def attempt_attack(curr, targets):
     return True
 
 def turn(curr, sprites, grid):
+  print(curr, curr.hp)
   if curr.dead:
     return False
 
   made_move = False
   #  find all targets
   targets = [s for s in sprites if s.type is not curr.type]
+
+  if(len(targets) < 1):
+    raise Exception('game end')
 
   # find open_squares in range of targets
   open_squares = []
@@ -189,8 +196,8 @@ def turn(curr, sprites, grid):
     # move
     x, y = curr.pos
     best_cell = best_move(grid[y][x], grid, open_squares)
-    print('best_cell', curr, curr.pos, 'to', best_cell.pos)
     if best_cell:
+      print('best_cell', curr, curr.pos, 'to', best_cell.pos)
       move_to(curr, best_cell)
       made_move = True
       attempt_attack(curr, targets)
@@ -207,7 +214,6 @@ def move_to(sprite, cell):
 def remove_from(s, grid):
   x, y = s.pos
   grid[y][x].remove_occupant()
-  print_grid(grid)
 
 def print_grid(grid):
   print('  ', end="")
@@ -233,16 +239,14 @@ def update(grid, sprites):
   sprites = [s for s in sprites if not s.dead]
   for d in dead:
     remove_from(d, grid)
-    print_grid(grid)
 
-  return has_move, grid, sprites
+  return has_move, grid, sort(sprites)
 
-def run(grid, sprites, steps = 28):
+def run(grid, sprites, steps = 47):
   has_move = True
   counter = 0
-  while counter <= steps:
+  while True:
     print('\nROUND', counter)
-    print(sprites)
     print_grid(grid)
     has_move, grid, sprites = update(grid, sprites)
     counter += 1
@@ -250,6 +254,9 @@ def run(grid, sprites, steps = 28):
 
 grid, sprites = parse(open('input.txt'))
 grid, sprites = parse(open('sample1.txt'))
-grid, sprites = parse(open('sample3.txt'))
-run(grid, sprites)
+grid, sprites = parse(open('sample2.txt'))
+try:
+  run(grid, sprites)
+except Exception as e:
+  print(e)
 # print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
