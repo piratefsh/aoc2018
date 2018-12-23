@@ -1,9 +1,11 @@
 from enum import Enum
 import math
 import time
-DEBUG= True
+DEBUG = False
 
 class NoTargetsException(Exception):
+  pass
+class ElfDeadException(Exception):
   pass
 
 class CellType(Enum):
@@ -43,17 +45,26 @@ class Entity:
 
     return(self.occupant.type.value)
 
+  def copy(self):
+    return self.__class__(self.type, (self.pos[0], self.pos[1]))
+
 class Sprite(Entity):
   def __init__(self, stype, pos):
     Entity.__init__(self, stype, pos);
     self.ap = 3
     self.hp = 200
     self.dead = False
+    self.raise_exception = False
+
+  def set_ap(self, ap):
+    self.ap = ap
 
   def reduce_hp(self, hp):
     self.hp -= hp
     if self.hp <= 0:
       self.dead = True
+      if self.raise_exception and self.type == SpriteType.ELF:
+        raise ElfDeadException()
 
   def attack(self, other):
     other.reduce_hp(self.ap)
@@ -204,18 +215,18 @@ def turn(curr, sprites, grid):
     best_cell = best_move(grid[y][x], grid, open_squares)
     if best_cell:
       # print('best_cell', curr, curr.pos, 'to', best_cell.pos)
-      move_to(curr, best_cell)
+      move_to(curr, best_cell, grid)
       made_move = True
       attempt_attack(curr, targets)
 
   # print('no move!')
   return made_move
 
-def move_to(sprite, cell):
+def move_to(sprite, cell, grid):
   x, y = sprite.pos
+  grid[y][x].remove_occupant()
   sprite.pos = cell.pos
   cell.add_occupant(sprite)
-  grid[y][x].remove_occupant()
 
 def remove_from(s, grid):
   x, y = s.pos
@@ -245,12 +256,12 @@ def clear_dead(sprites, grid):
 def update(grid, sprites):
   for s in sort(sprites):
     try:
-      res = turn(s, clear_dead(sprites, grid), grid)
+      turn(s, clear_dead(sprites, grid), grid)
     except NoTargetsException as e:
       return True, grid, clear_dead(sprites, grid)
   return False, grid, clear_dead(sprites, grid)
 
-def run(grid, sprites, steps = 47):
+def run(grid, sprites):
   done = False
   counter = 0
   while not done:
@@ -261,26 +272,65 @@ def run(grid, sprites, steps = 47):
     done, grid, sprites = update(grid, sprites)
     counter += 1
 
-  print_grid(grid)
   hps = sum([s.hp for s in sprites if not s.dead])
   print('remaining hp, rounds', hps, counter)
   return  hps * (counter-1)
 
+def make_copy(grid, ap):
+  new_grid = []
+  new_sprites = []
+  for row in grid:
+    new_row = []
+    for cell in row:
+      if(cell.occupant):
+        newsp = cell.occupant.copy()
+        newcl = cell.copy()
+        newcl.add_occupant(newsp)
+        new_sprites.append(newsp)
+        new_row.append(newcl)
+        if newsp.type == SpriteType.ELF:
+          newsp.ap = ap
+          newsp.raise_exception = True
+      else:
+        new_row.append(cell.copy())
+    new_grid.append(new_row)
+  return new_grid, new_sprites
 
-grid, sprites = parse(open('sample1.txt'))
+def min_win(gr, sp):
+  ap = 3
+  has_casualties = True
+  while has_casualties:
+    grid, sprites = make_copy(gr, ap)
+    try:
+      return run(grid, sprites)
+    except ElfDeadException:
+      has_casualties = True
+      ap += 1
+      continue
+    break
+
+  return ap
 
 grid, sprites = parse(open('sample2.txt'))
+assert(min_win(grid, sprites) == 4988)
 assert(run(grid, sprites) == 27730)
+
 grid, sprites = parse(open('sample4.txt'))
 assert(run(grid, sprites) == 36334)
+
 grid, sprites = parse(open('sample5.txt'))
 assert(run(grid, sprites) == 18740)
+
 grid, sprites = parse(open('sample6.txt'))
+assert(min_win(grid, sprites) == 6474)
 assert(run(grid, sprites) == 28944)
+
 grid, sprites = parse(open('sample7.txt'))
 assert(run(grid, sprites) == 27755)
+
 grid, sprites = parse(open('sample8.txt'))
 assert(run(grid, sprites) == 39514)
+
 grid, sprites = parse(open('input.txt'))
-print(run(grid, sprites)) #206175
-# print(bfs(grid[1][1], grid, [grid[1][4], grid[4][5]]))
+assert(min_win(grid, sprites) == 37992)
+assert(run(grid, sprites) == 206416)
