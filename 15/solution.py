@@ -163,12 +163,7 @@ def best_move(sprite, grid, open_squares):
 
   # for all surroundings, find one with nearest manhattan distance
   surroundings = get_open_neighbours(sprite, grid)
-  surrounding_dists = {}
-  for cell in surroundings:
-    reachable = bfs(cell, grid, [nearest])
-    if len(reachable.keys()) > 0:
-      surrounding_dists[cell] = reachable[nearest]
-
+  surrounding_dists = bfs(nearest, grid, surroundings)
   nearest_next_move = find_min(surrounding_dists)
   return nearest_next_move
 
@@ -273,7 +268,9 @@ def run(grid, sprites):
     counter += 1
 
   hps = sum([s.hp for s in sprites if not s.dead])
-  print('remaining hp, rounds', hps, counter)
+
+  if DEBUG:
+    print('remaining hp, rounds', hps, counter)
   return  hps * (counter-1)
 
 def make_copy(grid, ap):
@@ -334,3 +331,5 @@ assert(run(grid, sprites) == 39514)
 grid, sprites = parse(open('input.txt'))
 assert(min_win(grid, sprites) == 37992)
 assert(run(grid, sprites) == 206416)
+
+print('tests pass')
