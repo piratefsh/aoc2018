@@ -174,7 +174,7 @@ def turn(curr, sprites, grid):
     # attack target with lowest hp in reading order sort
     target = sorted(sort(in_range_targets), key=lambda x: x.hp)
     # print('in range targets', target)
-    # curr.attack(target)
+    curr.attack(target)
     return True
   else:
     # move
@@ -195,6 +195,10 @@ def move_to(sprite, cell):
   cell.add_occupant(sprite)
   grid[y][x].remove_occupant()
 
+def remove_from(s, grid):
+  x, y = s.pos
+  grid[y][x].remove_occupant()
+
 def print_grid(grid):
   print('  ', end="")
   for x in range(len(grid[0])):
@@ -212,15 +216,11 @@ def update(grid, sprites):
     res = turn(s, sprites, grid)
     has_move = has_move or res
 
+    dead = [s for s in sprites if s.dead]
+    for d in dead:
+      remove_from(s, grid)
+      sprites.remove(d)
 
-  new_sprites = []
-  for s in sprites:
-    if s.dead:
-      # remove from grid
-      x, y = s.pos
-      grid[y][x].remove_occupant()
-    else:
-      new_sprites.append(s)
   return has_move
 
 def run(grid, sprites, steps = 4):
