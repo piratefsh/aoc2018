@@ -52,6 +52,7 @@ def print_grid(grid):
     for x in range(minx, maxx):
       print(grid[(x, y)], end="")
     print()
+  print()
 
 def get_dims(grid):
   minx, miny = grid['dims']['min']
@@ -61,23 +62,26 @@ def get_dims(grid):
 def is_bottom(cell):
   return cell == '#' or cell == '~'
 
-def is_occupied(cell):
-  return is_bottom(cell) or cell == '|'
+def is_flowing(cell):
+  return cell == '|'
 
 def flow(grid, curr=(500, 0)):
-  print_grid(grid)
   minx, miny, maxx, maxy = get_dims(grid)
   x, y = curr
   curr_cell = grid[(x, y)]
+
+  print(x, y)
+
   # if reached the max y
-  if y < miny or y >= maxy -1 or x >= maxx - 1 or x < 0:
+  if y < miny or y >= maxy - 1 or x >= maxx or x < 0:
+    grid[(x, y)] = '|'
     return None
 
   # if has hit an edge
   if is_bottom(curr_cell):
     return (x, y)
 
-  if curr_cell == '|':
+  if is_flowing(curr_cell):
     return None
 
   # if has bottom (still water or clay)
@@ -87,23 +91,24 @@ def flow(grid, curr=(500, 0)):
     lbound = flow(grid, (x-1, y))
     # flood to right
     rbound = flow(grid, (x+1, y))
-    print(x, y, lbound, rbound)
+
     # if had clay bounds
     if lbound and rbound:
       # replace entire level with still water
       lx, ly = lbound
       rx, ry = rbound
-      for nx in range(lx, rx):
+      for nx in range(lx+1, rx):
         grid[(nx, ly)] = '~'
-        print(grid[(nx, ly)])
-      # pop up
-      # breakpoint()
+
+      # pop up and flow
       grid[(x, y-1)] = '.'
-      flow(grid, (x, y-1))
+      return flow(grid, (x, y-1))
+    else:
+      return lbound or rbound
   # else flood down
   else:
     grid[(x, y)] = '|'
-    flow(grid, (x, y+1))
+    return flow(grid, (x, y+1))
 
 
 clays = parse(open('sample.txt'))
