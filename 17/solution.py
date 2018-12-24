@@ -71,8 +71,8 @@ def is_water(cell):
 def count_water(grid):
   minx, miny, maxx, maxy = get_dims(grid)
   counter = 0
-  for x in range(minx + 1, maxx - 1):
-    for y in range(miny + 1, maxy - 1):
+  for x in range(minx, maxx):
+    for y in range(miny + 1, maxy):
       cell = grid[(x, y)]
       if is_water(cell):
         counter += 1
