@@ -1,6 +1,7 @@
 from collections import namedtuple
 import re
-
+import sys
+sys.setrecursionlimit(2**16)
 Clay = namedtuple('Clay', "x, y")
 
 def parse_coord(cstr, var):
@@ -83,8 +84,6 @@ def flow(grid, curr=(500, 0)):
   x, y = curr
   curr_cell = grid[(x, y)]
 
-  print(x, y)
-
   # if reached the max y
   if y < miny or y >= maxy - 1 or x >= maxx or x < 0:
     grid[(x, y)] = '|'
@@ -107,11 +106,13 @@ def flow(grid, curr=(500, 0)):
 
     # if had clay bounds
     if lbound and rbound:
-      # replace entire level with still water
       lx, ly = lbound
       rx, ry = rbound
-      for nx in range(lx+1, rx):
-        grid[(nx, ly)] = '~'
+
+      if(ly == ry):
+        # replace entire level with still water
+        for nx in range(lx+1, rx):
+          grid[(nx, ly)] = '~'
 
       # pop up and flow
       grid[(x, y-1)] = '.'
@@ -124,9 +125,12 @@ def flow(grid, curr=(500, 0)):
     return flow(grid, (x, y+1))
 
 
+# clays = parse(open('sample.txt'))
 clays = parse(open('input.txt'))
 grid = make_grid(clays)
-print_grid(grid)
-print(flow(grid))
+# print_grid(grid)
+print(get_dims(grid))
+minx, miny, maxx, maxy = get_dims(grid)
+print(flow(grid, (500, miny)))
 print_grid(grid)
 print(count_water(grid))
