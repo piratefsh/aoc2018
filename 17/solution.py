@@ -124,7 +124,7 @@ def flow(grid, curr=(500, 0)):
     return flow(grid, (x, y+1))
 
 
-clays = parse(open('sample.txt'))
+clays = parse(open('input.txt'))
 grid = make_grid(clays)
 print_grid(grid)
 print(flow(grid))
