@@ -65,6 +65,19 @@ def is_bottom(cell):
 def is_flowing(cell):
   return cell == '|'
 
+def is_water(cell):
+  return cell == '~' or cell == '|'
+
+def count_water(grid):
+  minx, miny, maxx, maxy = get_dims(grid)
+  counter = 0
+  for x in range(minx + 1, maxx - 1):
+    for y in range(miny + 1, maxy - 1):
+      cell = grid[(x, y)]
+      if is_water(cell):
+        counter += 1
+  return counter
+
 def flow(grid, curr=(500, 0)):
   minx, miny, maxx, maxy = get_dims(grid)
   x, y = curr
@@ -116,3 +129,4 @@ grid = make_grid(clays)
 print_grid(grid)
 print(flow(grid))
 print_grid(grid)
+print(count_water(grid))
