@@ -24,19 +24,21 @@ def run(ipr, program, regsize=6):
   registers = [0] * regsize
 
   while registers[ipr] < len(program):
+    # get curr line
     line_num = registers[ipr]
     line = program[line_num]
-    print(registers, line)
     op, a, b, c = line
+
+    # increment pointer
     ops.addi(ipr, 1, ipr, registers)
+
+    # fetch ip and run it
     fn = getattr(ops, op)
     fn(a, b, c, registers)
 
-    # increment ip
-
   return registers
 
-ipr, program = parse(open('sample.txt'))
+ipr, program = parse(open('input.txt'))
 print(program)
 end = run(ipr, program)
 print(end)
