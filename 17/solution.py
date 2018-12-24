@@ -27,6 +27,7 @@ def make_grid(clays):
   maxx = max([max(clay.x) for clay in clays]) + 1
 
   grid = {}
+
   for x in range(minx, maxx):
     for y in range(miny, maxy):
       grid[(x, y)] = '.'
@@ -42,20 +43,71 @@ def make_grid(clays):
     for x in range(sx, ex + 1):
       for y in range(sy, ey + 1):
         grid[(x, y)] = '#'
-
-    pass
-
   return grid
 
 def print_grid(grid):
-  minx, miny = grid['dims']['min']
-  maxx, maxy = grid['dims']['max']
-  print('dimensions', minx, maxx, miny , maxy)
+  minx, miny, maxx, maxy = get_dims(grid)
+  # print('dimensions', minx, maxx, miny , maxy)
   for y in range(miny, maxy):
     for x in range(minx, maxx):
       print(grid[(x, y)], end="")
     print()
 
+def get_dims(grid):
+  minx, miny = grid['dims']['min']
+  maxx, maxy = grid['dims']['max']
+  return minx, miny, maxx, maxy
+
+def is_bottom(cell):
+  return cell == '#' or cell == '~'
+
+def is_occupied(cell):
+  return is_bottom(cell) or cell == '|'
+
+def flow(grid, curr=(500, 0)):
+  print_grid(grid)
+  minx, miny, maxx, maxy = get_dims(grid)
+  x, y = curr
+  curr_cell = grid[(x, y)]
+  # if reached the max y
+  if y < miny or y >= maxy -1 or x >= maxx - 1 or x < 0:
+    return None
+
+  # if has hit an edge
+  if is_bottom(curr_cell):
+    return (x, y)
+
+  if curr_cell == '|':
+    return None
+
+  # if has bottom (still water or clay)
+  if is_bottom(grid[(x, y + 1)]):
+    grid[(x, y)] = '|'
+    # flood to left
+    lbound = flow(grid, (x-1, y))
+    # flood to right
+    rbound = flow(grid, (x+1, y))
+    print(x, y, lbound, rbound)
+    # if had clay bounds
+    if lbound and rbound:
+      # replace entire level with still water
+      lx, ly = lbound
+      rx, ry = rbound
+      for nx in range(lx, rx):
+        grid[(nx, ly)] = '~'
+        print(grid[(nx, ly)])
+      # pop up
+      # breakpoint()
+      grid[(x, y-1)] = '.'
+      flow(grid, (x, y-1))
+  # else flood down
+  else:
+    grid[(x, y)] = '|'
+    flow(grid, (x, y+1))
+
+
 clays = parse(open('sample.txt'))
-print(clays)
-print_grid(make_grid(clays))
+grid = make_grid(clays)
+print_grid(grid)
+print(flow(grid))
+print_grid(grid)
