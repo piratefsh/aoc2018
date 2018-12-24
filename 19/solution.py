@@ -22,23 +22,36 @@ def parse(file):
 
 def run(ipr, program, regsize=6):
   registers = [0] * regsize
+  counter = 0
+  ip = registers[ipr]
 
-  while registers[ipr] < len(program):
+  while ip < len(program):
+    counter +=1 
+    if counter > 10:
+      return registers
+
+    # set register with ip
+    ops.seti(ip, None, ipr, registers)
+
     # get curr line
-    line_num = registers[ipr]
-    line = program[line_num]
+    line = program[ip]
     op, a, b, c = line
 
-    # increment pointer
-    ops.addi(ipr, 1, ipr, registers)
+    print(ip, registers, line, end=" ")
+
 
     # fetch ip and run it
     fn = getattr(ops, op)
     fn(a, b, c, registers)
 
+    # reset ip from register
+    ip = registers[ipr]
+    ip = ip + 1
+    print(registers)
+
   return registers
 
-ipr, program = parse(open('input.txt'))
+ipr, program = parse(open('sample.txt'))
 print(program)
 end = run(ipr, program)
-print(end)
+assert(end[1] == 5)
