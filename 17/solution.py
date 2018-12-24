@@ -72,12 +72,15 @@ def is_water(cell):
 def count_water(grid):
   minx, miny, maxx, maxy = get_dims(grid)
   counter = 0
+  still = 0
   for x in range(minx, maxx):
     for y in range(miny + 1, maxy):
       cell = grid[(x, y)]
       if is_water(cell):
         counter += 1
-  return counter
+      if cell == '~':
+        still += 1
+  return counter, still
 
 def flow(grid, curr=(500, 0)):
   minx, miny, maxx, maxy = get_dims(grid)
@@ -129,8 +132,9 @@ def flow(grid, curr=(500, 0)):
 clays = parse(open('input.txt'))
 grid = make_grid(clays)
 # print_grid(grid)
-print(get_dims(grid))
+# print(get_dims(grid))
 minx, miny, maxx, maxy = get_dims(grid)
-print(flow(grid, (500, miny)))
-print_grid(grid)
-print(count_water(grid))
+flow(grid, (500, miny))
+# print_grid(grid)
+assert(count_water(grid) == (52800, 45210))
+assert(count_water(grid) == (52800, 45210))
