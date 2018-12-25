@@ -26,4 +26,4 @@ while r2 < r5:
 
   r2 += 1
 
-# find the sum of all multiples of r5=10551296
+# find the sum of all divisors of r5=10551296
