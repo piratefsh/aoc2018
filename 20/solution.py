@@ -61,12 +61,21 @@ def print_paths(node):
       c = curr.children[len(curr.children) - i - 1]
       queue.append((c, depth + 1))
 
+def traverse(node):
+  stack = [node]
+  while len(stack) > 0:
+    curr = stack.pop(0)
+    val, children = curr
+    print(curr, end=' ')
+    stack += children
+
 paths = parse(open('sample1.txt'))
 print_paths(paths)
-
+traverse(paths)
 paths = parse(open('sample2.txt'))
 print(open('sample2.txt').readline())
 print_paths(paths)
+traverse(paths)
 
 paths = parse(open('sample3.txt'))
 print(open('sample3.txt').readline())
