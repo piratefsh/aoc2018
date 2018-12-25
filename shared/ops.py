@@ -30,3 +30,13 @@ def eqri(A, B, C, R):
   R[C] = 1 if R[A] == B else 0
 def eqrr(A, B, C, R):
   R[C] = 1 if R[A] == R[B] else 0
+
+def custom(R):
+  while R[2] < R[5]:
+    R[3] = 1
+    while R[3] < R[5]:
+      R[4] = R[2] * R[3]
+      if R[4] == R[5]:
+        R[0] = R[0] + R[2]
+      R[3] += 1
+    R[2] += 1
