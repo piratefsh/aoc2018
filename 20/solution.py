@@ -9,33 +9,34 @@ def parse(file):
   stack = []
   curr_frame = []
   while c:
-    print(stack)
-    print(curr_frame)
-    print()
     if c == '^':
       root = Node(c, [])
-      stack.append(root)
-    elif c == '$' or c == ')':
+      stack.append([root])
+    elif c == ')' or c =='$':
+      # go back up one frame
       parents = stack.pop()
-      for p in parents:
-        for node in curr_frame:
-          p.children.append(node)
+      p = parents[-1]
+
+      for node in curr_frame:
+        p.children.append(node)
+
       curr_frame = parents
-
-      if c == '$':
-        break
+    elif c == '|':
+      if peek(file) == ')':
+        curr_frame.append(Node(None, []))
     elif c == '(':
-      # save curr frame
+      # stash curr frame and make new one
       stack.append(curr_frame)
-
-      # new frame
       curr_frame = []
     elif c in 'NEWS':
-      node = Node(c + consume_snippet(file), [])
+      node = Node(c + consume_path(file), [])
       curr_frame.append(node)
 
-    c = file.read(1)
+    c = advance(file)
   return root
+
+def advance(file, n=1):
+  return file.read(n)
 
 def peek(file):
   pos = file.tell()
@@ -43,29 +44,30 @@ def peek(file):
   file.seek(pos)
   return peekv
 
-def consume_snippet(file):
+def consume_path(file):
   val = ''
   c = None
   while peek(file) in 'NEWS':
-    c = file.read(1)
+    c = advance(file)
     val += c
   return val
 
 def print_paths(node):
   queue = [(node, 0)]
   while len(queue) > 0:
-    curr, depth = queue.pop(0)
-    print(' ' * depth + curr[0])
-    for c in curr.children:
+    curr, depth = queue.pop()
+    print(' ' * depth + str(curr[0]))
+    for i in range(len(curr.children)):
+      c = curr.children[len(curr.children) - i - 1]
       queue.append((c, depth + 1))
 
 paths = parse(open('sample1.txt'))
 print_paths(paths)
 
-print(open('sample2.txt').readline())
 paths = parse(open('sample2.txt'))
+print(open('sample2.txt').readline())
 print_paths(paths)
 
-print(open('sample3.txt').readline())
 paths = parse(open('sample3.txt'))
+print(open('sample3.txt').readline())
 print_paths(paths)
