@@ -23,7 +23,7 @@ def parse(file):
       curr_frame = parents
     elif c == '|':
       if peek(file) == ')':
-        curr_frame.append(Node(None, []))
+        curr_frame.append(Node('', []))
     elif c == '(':
       # stash curr frame and make new one
       stack.append(curr_frame)
@@ -63,24 +63,37 @@ def print_paths(node):
       c = curr.next[len(curr.next) - i - 1]
       queue.append((c, depth + 1))
 
-def traverse(node, dist = 0):
+def traverse(node, pos=(0,0), dist = -1, graph={}):
+  for c in node.value:
+    x, y = pos
+
+    if c == 'E':
+      pos = (x + 1, y)
+    elif c == 'W':
+      pos = (x - 1, y)
+    elif c == 'N':
+      pos = (x, y - 1)
+    elif c == 'S':
+      pos = (x, y + 1)
+
+    dist += 1
+
+    print(c, dist)
+
+    if pos not in graph:
+      graph[pos] = dist
+    else:
+      graph[pos] = max(dist, graph[pos])
+
   if len(node.next) == 0:
-    return 1 + dist
-
-  # for c in node.value:
-  #   x, y = curr_pos
-
-  #   if c == 'E':
-  #     curr_pos = (x + 1, y)
-  #   elif c == 'W':
-  #     curr_pos = (x - 1, y)
-  #   elif c == 'N':
-  #     curr_pos = (x, y - 1)
-  #   elif c == 'S':
-  #     curr_pos = (x, y + 1)
+    return dist, graph
 
   # traverse children
-  return max([traverse(c, dist + len(node.value)) for c in node.next])
+  prev_len = 0
+  for c in node.next:
+    _, graph = traverse(c, pos, dist + prev_len, graph)
+    prev_len = len(c.value)
+  return dist, graph
 
 # paths = parse(open('sample1.txt'))
 # print_paths(paths)
@@ -88,9 +101,14 @@ def traverse(node, dist = 0):
 paths = parse(open('sample2.txt'))
 print(open('sample2.txt').readline())
 # print_paths(paths)
-print(traverse(paths))
+dist, graph = traverse(paths)
+for g in graph:
+  print(g, ':', graph[g])
 
 paths = parse(open('sample3.txt'))
 print(open('sample3.txt').readline())
-print(traverse(paths))
+dist, graph = traverse(paths)
+
+for g in graph:
+  print(g, ':', graph[g])
 # print_paths(paths)
