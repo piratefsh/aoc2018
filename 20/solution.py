@@ -1,7 +1,7 @@
 
 from collections import namedtuple
 
-Node = namedtuple('Node', 'value, children')
+Node = namedtuple('Node', 'value, next')
 
 def parse(file):
   c = file.read(1)
@@ -18,7 +18,7 @@ def parse(file):
       p = parents[-1]
 
       for node in curr_frame:
-        p.children.append(node)
+        p.next.append(node)
 
       curr_frame = parents
     elif c == '|':
@@ -33,6 +33,8 @@ def parse(file):
       curr_frame.append(node)
 
     c = advance(file)
+
+  print_paths(root)
   return root
 
 def advance(file, n=1):
@@ -57,26 +59,38 @@ def print_paths(node):
   while len(queue) > 0:
     curr, depth = queue.pop()
     print(' ' * depth + str(curr[0]))
-    for i in range(len(curr.children)):
-      c = curr.children[len(curr.children) - i - 1]
+    for i in range(len(curr.next)):
+      c = curr.next[len(curr.next) - i - 1]
       queue.append((c, depth + 1))
 
-def traverse(node):
-  stack = [node]
-  while len(stack) > 0:
-    curr = stack.pop(0)
-    val, children = curr
-    print(curr, end=' ')
-    stack += children
+def traverse(node, dist = 0):
+  if len(node.next) == 0:
+    return 1 + dist
 
-paths = parse(open('sample1.txt'))
-print_paths(paths)
-traverse(paths)
+  # for c in node.value:
+  #   x, y = curr_pos
+
+  #   if c == 'E':
+  #     curr_pos = (x + 1, y)
+  #   elif c == 'W':
+  #     curr_pos = (x - 1, y)
+  #   elif c == 'N':
+  #     curr_pos = (x, y - 1)
+  #   elif c == 'S':
+  #     curr_pos = (x, y + 1)
+
+  # traverse children
+  return max([traverse(c, dist + len(node.value)) for c in node.next])
+
+# paths = parse(open('sample1.txt'))
+# print_paths(paths)
+# traverse(paths)
 paths = parse(open('sample2.txt'))
 print(open('sample2.txt').readline())
-print_paths(paths)
-traverse(paths)
+# print_paths(paths)
+print(traverse(paths))
 
 paths = parse(open('sample3.txt'))
 print(open('sample3.txt').readline())
-print_paths(paths)
+print(traverse(paths))
+# print_paths(paths)
