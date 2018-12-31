@@ -63,37 +63,47 @@ def print_paths(node):
       c = curr.next[len(curr.next) - i - 1]
       queue.append((c, depth + 1))
 
-def traverse(node, pos=(0,0), dist = -1, graph={}):
-  for c in node.value:
-    x, y = pos
+def move(c, pos):
+  x, y = pos
 
-    if c == 'E':
-      pos = (x + 1, y)
-    elif c == 'W':
-      pos = (x - 1, y)
-    elif c == 'N':
-      pos = (x, y - 1)
-    elif c == 'S':
-      pos = (x, y + 1)
+  if c == 'E':
+    pos = (x + 1, y)
+  elif c == 'W':
+    pos = (x - 1, y)
+  elif c == 'N':
+    pos = (x, y - 1)
+  elif c == 'S':
+    pos = (x, y + 1)
 
-    dist += 1
+  return pos
 
-    print(c, dist)
+def traverse(node, graph={}, depths=[0], pos=(0,0)):
+  path = node.value
+  options = node.next
 
-    if pos not in graph:
-      graph[pos] = dist
-    else:
-      graph[pos] = max(dist, graph[pos])
+  new_depths = []
+  for depth in depths:
+    for p in path:
+      pos = move(p, pos)
+      depth += 1
+      if pos in graph:
+        graph[pos] = min(graph[pos], depth)
+      else:
+        graph[pos] = depth
+    new_depths.append(depth)
 
-  if len(node.next) == 0:
-    return dist, graph
+  print(path, new_depths)
 
-  # traverse children
-  prev_len = 0
-  for c in node.next:
-    _, graph = traverse(c, pos, dist + prev_len, graph)
-    prev_len = len(c.value)
-  return dist, graph
+  if len(options) == 0:
+    return new_depths, graph
+
+  child_depths = []
+  for option  in options:
+    d, g = traverse(option, graph, new_depths, pos)
+    child_depths += d
+
+  # print('child', node.value, child_depths)
+  return child_depths, graph
 
 # paths = parse(open('sample1.txt'))
 # print_paths(paths)
@@ -105,10 +115,10 @@ dist, graph = traverse(paths)
 for g in graph:
   print(g, ':', graph[g])
 
-paths = parse(open('sample3.txt'))
-print(open('sample3.txt').readline())
-dist, graph = traverse(paths)
+# paths = parse(open('sample3.txt'))
+# print(open('sample3.txt').readline())
+# dist, graph = traverse(paths)
 
-for g in graph:
-  print(g, ':', graph[g])
+# for g in graph:
+#   print(g, ':', graph[g])
 # print_paths(paths)
